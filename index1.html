@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>オールスター感謝祭風 クイズサバイバル</title>
+  <title>免疫学 クイズサバイバル</title>
   <!-- Tailwind CSS (CDN) -->
   <script src="https://cdn.tailwindcss.com"></script>
   
@@ -13,6 +13,14 @@
   
   <!-- Babel (ブラウザ上トランスパイラ) -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script>
+    // Classicランタイムを強制し、ブラウザ上でのJSXのパース衝突を100%解決するカスタムプリセットの登録
+    Babel.registerPreset('classic-react', {
+      presets: [
+        [Babel.availablePresets['react'], { runtime: 'classic' }]
+      ]
+    });
+  </script>
 
   <!-- Firebase SDK Compat版 (ESモジュール競合を防止する堅牢なグローバルCDN) -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
@@ -42,26 +50,34 @@
     .animate-banner {
       animation: scaleBanner 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
     }
-    /* テレビ風走査線・グリッド風装飾 */
     .scanlines {
       background: linear-gradient(
         rgba(18, 16, 16, 0) 50%, 
-        rgba(0, 0, 0, 0.25) 50%
+        rgba(0, 0, 0, 0.2) 50%
       );
       background-size: 100% 4px;
     }
     .lcd-number {
       font-family: 'Courier New', Courier, monospace;
-      text-shadow: 0 0 10px rgba(234, 179, 8, 0.6);
+      text-shadow: 0 0 12px rgba(234, 179, 8, 0.7);
+    }
+    /* 横スクロール対応・スクロールバー非表示 */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
     }
   </style>
 </head>
-<body class="bg-slate-950 text-white min-h-screen select-none scanlines">
+<body class="bg-slate-950 text-white min-h-screen select-none scanlines overflow-hidden">
 
-  <div id="root"></div>
+  <!-- クリーンなReactの描画ツリーのみで制御 -->
+  <div id="root" class="h-full"></div>
 
-  <!-- React & アプリケーションロジック -->
-  <script type="text/babel">
+  <!-- 登録したカスタムプリセット classic-react を適用してトランスパイルを実行 -->
+  <script type="text/babel" data-presets="classic-react">
     const { useState, useEffect, useRef } = React;
 
     // ==========================================
@@ -79,6 +95,23 @@
         config = JSON.parse(__firebase_config);
       }
       
+      // ==========================================
+      // 【Googleサイトなどで自主運用・同期テストを行う場合】
+      // 下記の myCustomConfig のコメントアウトを解除し、Firebaseプロジェクトの設定値を直書きしてください。
+      // Firestoreと匿名(Anonymous)認証を有効にすれば、PCとスマホが完璧に同期します。
+      // ==========================================
+      /*
+      const myCustomConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_PROJECT_ID.appspot.com",
+        messagingSenderId: "YOUR_SENDER_ID",
+        appId: "YOUR_APP_ID"
+      };
+      config = myCustomConfig;
+      */
+
       if (config && window.firebase) {
         firebaseApp = window.firebase.initializeApp(config);
         auth = window.firebase.auth();
@@ -129,13 +162,6 @@
       </svg>
     );
 
-    const AlertTriangle = ({ className }) => (
-      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
-        <line x1="12" y1="9" x2="12" y2="13" /><line x1="12" y1="17" x2="12.01" y2="17" />
-      </svg>
-    );
-
     const Clock = ({ className }) => (
       <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
@@ -175,21 +201,9 @@
       </svg>
     );
 
-    const ShieldAlert = ({ className }) => (
-      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><line x1="12" y1="8" x2="12" y2="12" /><line x1="12" y1="16" x2="12.01" y2="16" />
-      </svg>
-    );
-
-    const Award = ({ className }) => (
-      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="8" r="7" /><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88" />
-      </svg>
-    );
-
     const BarChart = ({ className }) => (
       <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" />
+        <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="20" /><line x1="6" y1="20" x2="6" y2="14" />
       </svg>
     );
 
@@ -200,7 +214,9 @@
       </svg>
     );
 
-    // デフォルト問題20問
+    // ==========================================
+    // クイズ用設問データ
+    // ==========================================
     const DEFAULT_QUESTIONS = [
       { id: 1, text: "太陽系で最も大きい惑星はどれ？", options: ["地球", "火星", "木星", "土星", "海王星"], answer: 2 },
       { id: 2, text: "日本で一番高い山は富士山ですが、二番目に高い山は？", options: ["北岳", "槍ヶ岳", "奥穂高岳", "間ノ岳", "乗鞍岳"], answer: 0 },
@@ -208,19 +224,19 @@
       { id: 4, text: "英語で「オクトパス（Octopus）」といえば何？", options: ["イカ", "タコ", "クラゲ", "ヒトデ", "カニ"], answer: 1 },
       { id: 5, text: "世界で最も面積の広い国はどこ？", options: ["カナダ", "アメリカ", "中国", "ロシア", "ブラジル"], answer: 3 },
       { id: 6, text: "水（H2O）を電気分解したとき、陰極（マイナス極）から発生する気体は？", options: ["酸素", "水素", "二酸化炭素", "窒素", "塩素"], answer: 1 },
-      { id: 7, text: "ことわざ「犬も歩けば棒に当たる」の次の句として近い意味は？", options: ["災難に遭う", "幸運に出会う", "道に迷う", "怪我をする", "友達ができる"], answer: 0 },
-      { id: 8, text: "トランプのカードはジョーカーを除くと全部で何枚？", options: ["48枚", "50枚", "52枚", "54枚", "56枚"], answer: 2 },
+      { id: 7, text: "ことわざ「犬も歩けば棒に当たる」の次の句（本来の意味）として近いのは？", options: ["災難に遭う", "幸運に出会う", "道に迷う", "怪我をする", "友達ができる"], answer: 0 },
+      { id: 8, text: "トランプ of カードはジョーカーを除くと全部で何枚？", options: ["48枚", "50枚", "52枚", "54枚", "56枚"], answer: 2 },
       { id: 9, text: "元素記号「Au」で表される金属はどれ？", options: ["銀", "銅", "鉄", "金", "白金"], answer: 3 },
       { id: 10, text: "日本国憲法が公布された日はいつ？", options: ["5月3日", "11月3日", "2月11日", "8月15日", "12月23日"], answer: 1 },
       { id: 11, text: "世界で最も長い川はどれ？", options: ["アマゾン川", "ナイル川", "長江", "ミシシッピ川", "信濃川"], answer: 1 },
       { id: 12, text: "日本の都道府県で、最も面積が小さいのはどこ？", options: ["東京都", "大阪府", "香川県", "沖縄県", "鳥取県"], answer: 2 },
-      { id: 13, text: "一般的なサッカーの試合で、1チームのピッチ上の選手数は何人？", options: ["9人", "10人", "11人", "12人", "15人"], answer: 2 },
+      { id: 13, text: "一般的なサッカーの試合で、1チーム of ピッチ上の選手数は何人？", options: ["9人", "10人", "11人", "12人", "15人"], answer: 2 },
       { id: 14, text: "「人間は考える葦である」という言葉を残したフランスの哲学者は？", options: ["デカルト", "パスカル", "ルソー", "サルトル", "モンテーニュ"], answer: 1 },
       { id: 15, text: "世界一高い自立式電波塔「東京スカイツリー」の高さは何メートル？", options: ["333m", "555m", "634m", "777m", "1000m"], answer: 2 },
       { id: 16, text: "哺乳類の中で、唯一自力で空を飛ぶことができるのはどれ？", options: ["モモンガ", "ムササビ", "コウモリ", "ペンギン", "ダチョウ"], answer: 2 },
       { id: 17, text: "ダイヤモンドは何の元素からできている？", options: ["炭素", "水素", "窒素", "酸素", "ケイ素"], answer: 0 },
       { id: 18, text: "日本の初代内閣総理大臣は誰？", options: ["板垣退助", "伊藤博文", "大隈重信", "西郷隆盛", "山県有朋"], answer: 1 },
-      { id: 19, text: "オリンピックの五輪マークの青、黄、黒、緑、あと一つの色は？", options: ["紫", "オレンジ", "白", "赤", "ピンク"], answer: 3 },
+      { id: 19, text: "オリンピックの五輪マークの青、黄、黒、緑、あと一つの色は？", options: ["紫", "オレンジ", "白", "赤", "pink"], answer: 3 },
       { id: 20, text: "1年は365日ですが、うるう年は何日？", options: ["364日", "365日", "366日", "367日", "368日"], answer: 2 }
     ];
 
@@ -234,14 +250,14 @@
 
       const [questions, setQuestions] = useState(DEFAULT_QUESTIONS);
       
-      // 作成・編集ボード用ステート
+      // クイズ編集ステート
       const [isEditingQuestions, setIsEditingQuestions] = useState(false);
       const [selectedEditIndex, setSelectedEditIndex] = useState(0);
       const [editQuestionText, setEditQuestionText] = useState('');
       const [editOptions, setEditOptions] = useState(["", "", "", "", ""]);
       const [editAnswerIndex, setEditAnswerIndex] = useState(0);
 
-      // ゲームデータ同期用
+      // 同期ステート
       const [gameState, setGameState] = useState({
         status: 'lobby', 
         currentQIndex: 0,
@@ -250,29 +266,40 @@
       const [players, setPlayers] = useState([]);
       const [answers, setAnswers] = useState([]);
 
-      // 回答者ステート
+      // プレイヤー用ステート（「お休みシステム」は完全に廃止）
       const [hasAnswered, setHasAnswered] = useState(false);
       const [myAnswer, setMyAnswer] = useState(null);
       const [myAnswerTime, setMyAnswerTime] = useState(null);
       const [isCorrectLocal, setIsCorrectLocal] = useState(false);
-      const [isEliminated, setIsEliminated] = useState(false); // 最遅足切りロック
 
-      // 10秒タイマー
-      const [timeLeft, setTimeLeft] = useState(10.00);
+      // シンキングタイム：15秒
+      const [timeLeft, setTimeLeft] = useState(15.00);
 
-      // ワースト発表演出用ステート
+      // 演出用
       const [revealStage, setRevealStage] = useState('idle');
       const [visibleLosers, setVisibleLosers] = useState([]);
       const [countdownNum, setCountdownNum] = useState(3);
       const [worstPlayer, setWorstPlayer] = useState(null);
-      
-      // 最速王者（チャンピオン）演出用ステート
       const [fastestPlayer, setFastestPlayer] = useState(null);
+
+      // 点滅時間を制御するフラグ
+      const [isFlashingActive, setIsFlashingActive] = useState(false);
+      const flashTimeoutRef = useRef(null);
+
+      // 最終順位発表用(カウントアップ表示)
+      const [revealRankIndex, setRevealRankIndex] = useState(-1);
+      const [revealRankingActive, setRevealRankActive] = useState(false);
+
+      // リモコンパネル（操作盤）の開閉状態（極極細スリム化のためデフォルト閉設定）
+      const [isRemoteOpen, setIsRemoteOpen] = useState(false);
 
       const [shareUrl, setShareUrl] = useState('');
       const [isLocalFileError, setIsLocalFileError] = useState(false);
 
-      // 役割の自動決定＆Cドライブエラー監視
+      // 状態リフレッシュ競合を完全に排除するRef
+      const prevStatusRef = useRef(null);
+      const prevQIndexRef = useRef(null);
+
       useEffect(() => {
         const params = new URLSearchParams(window.location.search);
         const roleParam = params.get('role');
@@ -290,7 +317,7 @@
         }
       }, []);
 
-      // 効果音合成（Web Audio API）
+      // サウンド再生
       const playSound = (type) => {
         if (isMuted) return;
         try {
@@ -317,9 +344,9 @@
             osc.stop(ctx.currentTime + 0.25);
           } else if (type === 'drumroll') {
             osc.type = 'triangle';
-            osc.frequency.setValueAtTime(85, ctx.currentTime);
-            for (let i = 0; i < 15; i++) {
-              osc.frequency.setValueAtTime(85 + Math.random() * 30, ctx.currentTime + i * 0.05);
+            osc.frequency.setValueAtTime(120, ctx.currentTime);
+            for (let i = 0; i < 20; i++) {
+              osc.frequency.setValueAtTime(120 + Math.random() * 60, ctx.currentTime + i * 0.04);
             }
             gain.gain.setValueAtTime(0.18, ctx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.8);
@@ -334,9 +361,9 @@
             osc.start();
             osc.stop(ctx.currentTime + 1.4);
           } else if (type === 'correct') {
-            osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-            osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08); // E5
-            osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.16); // G5
+            osc.frequency.setValueAtTime(523.25, ctx.currentTime); 
+            osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.08); 
+            osc.frequency.setValueAtTime(783.99, ctx.currentTime + 0.16); 
             gain.gain.setValueAtTime(0.12, ctx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
             osc.start();
@@ -368,7 +395,7 @@
         }
       };
 
-      // 認証（Firebase / デモモード）
+      // 認証
       useEffect(() => {
         if (!isOnlineMode) {
           setUser({ uid: 'offline-local-user-id' });
@@ -385,7 +412,7 @@
               await auth.signInAnonymously();
             }
           } catch (error) {
-            console.error("Auth failed:", error);
+            console.error(error);
           }
         };
         initAuth();
@@ -400,40 +427,33 @@
         return () => unsubscribe();
       }, []);
 
-      // クラウド同期 (オンライン・オフライン完全自動判定)
+      // データ同期
       useEffect(() => {
         if (!user) return;
 
         if (!isOnlineMode) {
           setPlayers([
-            { id: 'demo-p1', name: '🌸 たろう', score: 20, isEliminated: false },
-            { id: 'demo-p2', name: '🌟 はなこ', score: 10, isEliminated: false },
-            { id: 'demo-p3', name: '✏️ けんた', score: 30, isEliminated: false }
+            { id: 'offline-local-user-id', name: 'あなた（ゲスト）', score: 0 },
+            { id: 'demo-p1', name: 'たろう', score: 20 },
+            { id: 'demo-p2', name: 'はなこ', score: 10 },
+            { id: 'demo-p3', name: 'けんた', score: 30 }
           ]);
           return;
         }
 
-        // オンライン監視 (snap.existsを真偽値プロパティと関数呼び出しの双方に対応させて絶対にエラーを防ぐ)
         const gameStateDocRef = db.doc(`artifacts/${appId}/public/data/game_state/current`);
         const unsubGameState = gameStateDocRef.onSnapshot((snap) => {
           const exists = snap && (typeof snap.exists === 'function' ? snap.exists() : snap.exists);
-          if (exists) {
-            setGameState(snap.data());
-          } else {
-            gameStateDocRef.set({ status: 'lobby', currentQIndex: 0, questionStartTime: null });
-          }
-        }, (err) => console.error(err));
+          if (exists) setGameState(snap.data());
+          else gameStateDocRef.set({ status: 'lobby', currentQIndex: 0, questionStartTime: null });
+        });
 
         const customQuestionsDocRef = db.doc(`artifacts/${appId}/public/data/questions/custom`);
         const unsubQuestions = customQuestionsDocRef.onSnapshot((snap) => {
           const exists = snap && (typeof snap.exists === 'function' ? snap.exists() : snap.exists);
-          if (exists) {
-            const data = snap.data();
-            if (data?.list) setQuestions(data.list);
-          } else {
-            customQuestionsDocRef.set({ list: DEFAULT_QUESTIONS });
-          }
-        }, (err) => console.error(err));
+          if (exists) { const d = snap.data(); if (d?.list) setQuestions(d.list); }
+          else customQuestionsDocRef.set({ list: DEFAULT_QUESTIONS });
+        });
 
         const playersColRef = db.collection(`artifacts/${appId}/public/data/players`);
         const unsubPlayers = playersColRef.onSnapshot((snap) => {
@@ -441,14 +461,14 @@
           snap.forEach((d) => { if (d.data()) plist.push({ id: d.id, ...d.data() }); });
           plist.sort((a, b) => (b.score || 0) - (a.score || 0));
           setPlayers(plist);
-        }, (err) => console.error(err));
+        });
 
         const answersColRef = db.collection(`artifacts/${appId}/public/data/answers`);
         const unsubAnswers = answersColRef.onSnapshot((snap) => {
           const alist = [];
           snap.forEach((d) => { if (d.data()) alist.push({ id: d.id, ...d.data() }); });
           setAnswers(alist);
-        }, (err) => console.error(err));
+        });
 
         return () => {
           unsubGameState();
@@ -458,26 +478,17 @@
         };
       }, [user]);
 
-      // ロック状態同期
-      useEffect(() => {
-        if (!user || players.length === 0) return;
-        const me = players.find(p => p.id === user.uid);
-        if (me) {
-          setIsEliminated(!!me.isEliminated);
-        }
-      }, [players, user]);
-
-      // 10秒タイマー
+      // 15秒リアルタイム同期タイマー
       useEffect(() => {
         if (gameState.status !== 'reading_answering' || !gameState.questionStartTime) {
-          setTimeLeft(10.00);
+          setTimeLeft(15.00);
           return;
         }
 
         let isTimeUpCalled = false;
         const interval = setInterval(() => {
           const elapsed = Date.now() - gameState.questionStartTime;
-          const remaining = Math.max(0, 10 - elapsed / 1000);
+          const remaining = Math.max(0, 15 - elapsed / 1000);
           setTimeLeft(remaining);
 
           const integerPart = Math.floor(remaining);
@@ -490,9 +501,7 @@
             if (!isTimeUpCalled) {
               isTimeUpCalled = true;
               playSound('timeup');
-              if (role === 'host') {
-                stopAnsweringAndShowPoll();
-              }
+              if (role === 'host') stopAnsweringAndShowPoll();
             }
           }
         }, 50);
@@ -500,30 +509,49 @@
         return () => clearInterval(interval);
       }, [gameState.status, gameState.questionStartTime, role]);
 
-      // フェーズ変更イベント
+      // 2秒限定の点滅タイマー制御（正解発表）
       useEffect(() => {
-        if (gameState.status === 'reading_answering') {
-          setHasAnswered(false);
-          setMyAnswer(null);
-          setMyAnswerTime(null);
-          setIsCorrectLocal(false);
-          setRevealStage('idle');
-          setVisibleLosers([]);
-          setWorstPlayer(null);
-          setFastestPlayer(null);
-        }
+        if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
+        setIsFlashingActive(false);
 
-        if (gameState.status === 'reveal_poll') {
-          // 回答締め切り時にホスト側で全員のロックを解除（1問お休みを1問だけで終了させる）
-          if (role === 'host' && isOnlineMode) {
-            const batch = db.batch();
-            players.forEach(p => {
-              if (p.isEliminated) {
-                batch.update(db.doc(`artifacts/${appId}/public/data/players/${p.id}`), { isEliminated: false });
-              }
-            });
-            batch.commit();
+        if (gameState.status === 'reveal_answer') {
+          setIsFlashingActive(true);
+          flashTimeoutRef.current = setTimeout(() => {
+            setIsFlashingActive(false); // 2秒後に通常点灯表示に戻す
+          }, 2000);
+        }
+      }, [gameState.status]);
+
+      // 2秒限定の点滅タイマー制御（最遅ワースト発表）
+      useEffect(() => {
+        if (gameState.status === 'reveal_worst' && revealStage === 'showing_worst') {
+          setIsFlashingActive(true);
+          if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
+          flashTimeoutRef.current = setTimeout(() => {
+            setIsFlashingActive(false); // 2秒後に通常表示に戻す
+          }, 2000);
+        }
+      }, [gameState.status, revealStage]);
+
+      // 【チラつき・リセットを100%解決した厳密ステート同期制御】
+      useEffect(() => {
+        const statusChanged = prevStatusRef.current !== gameState.status;
+        const qIndexChanged = prevQIndexRef.current !== gameState.currentQIndex;
+
+        // 次の問題が出題された「その瞬間」にだけリセットをかける
+        if (statusChanged || qIndexChanged) {
+          if (gameState.status === 'reading_answering') {
+            setHasAnswered(false);
+            setMyAnswer(null);
+            setMyAnswerTime(null);
+            setIsCorrectLocal(false);
+            setRevealStage('idle');
+            setVisibleLosers([]);
+            setWorstPlayer(null);
+            setFastestPlayer(null);
           }
+          prevStatusRef.current = gameState.status;
+          prevQIndexRef.current = gameState.currentQIndex;
         }
 
         if (gameState.status === 'reveal_answer') {
@@ -542,9 +570,8 @@
         if (gameState.status === 'reveal_worst') {
           calculateWorstCorrectAndTriggerPresentation();
         }
-      }, [gameState.status, gameState.currentQIndex, questions, answers]);
+      }, [gameState.status, gameState.currentQIndex, questions, answers, user]);
 
-      // 早押しワースト・最速チャンピオン判定
       const calculateWorstCorrectAndTriggerPresentation = () => {
         if (!players || players.length === 0) return;
         const currentQ = questions[gameState.currentQIndex];
@@ -552,31 +579,26 @@
 
         const correctAnswers = answers.filter(ans => ans && ans.selectedOption === currentQ.answer);
         if (correctAnswers.length === 0) {
-          setWorstPlayer(null);
-          setFastestPlayer(null);
-          setRevealStage('idle');
-          return;
+          setWorstPlayer(null); setFastestPlayer(null); setRevealStage('idle'); return;
         }
 
         const correctPlayersList = correctAnswers.map(ans => {
           const pInfo = players.find(p => p.id === ans.playerId);
-          return {
-            id: ans.playerId,
-            name: ans.playerName || pInfo?.name || 'ゲスト',
-            time: ans.time || 10000
-          };
+          return { id: ans.playerId, name: ans.playerName || pInfo?.name || 'ゲスト', time: ans.time || 15000 };
         });
 
-        // 遅い順
-        correctPlayersList.sort((a, b) => b.time - a.time);
-        const worst = correctPlayersList[0];
+        // 早押しが速い（timeが小さい）順にソート
+        correctPlayersList.sort((a, b) => a.time - b.time);
+        
+        const fastest = correctPlayersList[0];
+        const worst = correctPlayersList.length > 1 ? correctPlayersList[correctPlayersList.length - 1] : null;
+
+        setFastestPlayer(fastest);
         setWorstPlayer(worst);
 
-        // 早い順（最速チャンピオン判定用）
-        const sortedFastest = [...correctPlayersList].reverse();
-        setFastestPlayer(sortedFastest[0]); // 最速1位
-
-        const worstTenExcludingFirst = correctPlayersList.slice(1, 11).reverse();
+        // 候補アニメーション用の下位10名（遅い順）
+        const sortedDelay = [...correctPlayersList].reverse();
+        const worstTenExcludingFirst = sortedDelay.slice(0, 10);
         triggerWorstAnimationSequence(worstTenExcludingFirst, worst);
       };
 
@@ -612,28 +634,23 @@
         }, 600);
       };
 
-      // プレイヤー参加
       const joinGame = async (e) => {
         e.preventDefault();
         if (!playerName.trim() || !user) return;
-
         localStorage.setItem('early_quiz_player_name', playerName);
 
         if (isOnlineMode) {
-          const playerDocRef = db.doc(`artifacts/${appId}/public/data/players/${user.uid}`);
-          await playerDocRef.set({ name: playerName, score: 0, joinedAt: Date.now(), isEliminated: false });
+          await db.doc(`artifacts/${appId}/public/data/players/${user.uid}`).set({ name: playerName, score: 0, joinedAt: Date.now() });
         } else {
-          const newPlayer = { id: user.uid, name: playerName, score: 0, joinedAt: Date.now(), isEliminated: false };
+          const newPlayer = { id: user.uid, name: playerName, score: 0, joinedAt: Date.now() };
           setPlayers(prev => [newPlayer, ...prev.filter(p => p.id !== user.uid)]);
         }
-
         setHasJoined(true);
         playSound('click');
       };
 
-      // クイズ早押し選択
       const handleAnswerSelect = async (optionIndex) => {
-        if (hasAnswered || gameState.status !== 'reading_answering' || !user || isEliminated || timeLeft <= 0) return;
+        if (hasAnswered || gameState.status !== 'reading_answering' || !user || timeLeft <= 0) return;
 
         const answerTime = Date.now() - (gameState.questionStartTime || Date.now());
         setHasAnswered(true);
@@ -642,32 +659,17 @@
         playSound('click');
 
         const currentQ = questions[gameState.currentQIndex];
-        const isCorrect = optionIndex === currentQ?.answer;
-
         if (isOnlineMode) {
-          const answerDocRef = db.doc(`artifacts/${appId}/public/data/answers/${user.uid}`);
-          await answerDocRef.set({
-            playerId: user.uid,
-            playerName: playerName,
-            selectedOption: optionIndex,
-            time: answerTime,
-            isCorrect: isCorrect,
-            timestamp: Date.now()
+          await db.doc(`artifacts/${appId}/public/data/answers/${user.uid}`).set({
+            playerId: user.uid, playerName: playerName, selectedOption: optionIndex, time: answerTime, isCorrect: optionIndex === currentQ?.answer, timestamp: Date.now()
           });
         } else {
-          const newAns = {
-            id: user.uid,
-            playerId: user.uid,
-            playerName: playerName,
-            selectedOption: optionIndex,
-            time: answerTime,
-            isCorrect: isCorrect
-          };
+          const newAns = { id: user.uid, playerId: user.uid, playerName: playerName, selectedOption: optionIndex, time: answerTime, isCorrect: optionIndex === currentQ?.answer };
           setAnswers(prev => [newAns, ...prev.filter(a => a.playerId !== user.uid)]);
         }
       };
 
-      // 問題作成・編集
+      // クイズ編集に関連するメソッド
       const openQuestionEditor = () => {
         playSound('click');
         setIsEditingQuestions(true);
@@ -720,10 +722,12 @@
         setIsEditingQuestions(false);
       };
 
-      // リセット
+      // 全データリセット
       const resetGame = async () => {
         playSound('gong');
         setRevealStage('idle');
+        setRevealRankActive(false);
+        setRevealRankIndex(-1);
 
         if (isOnlineMode) {
           const batch = db.batch();
@@ -739,112 +743,16 @@
         } else {
           setGameState({ status: 'lobby', currentQIndex: 0, questionStartTime: null });
           setPlayers([
-            { id: 'demo-p1', name: '🌸 たろう', score: 20, isEliminated: false },
-            { id: 'demo-p2', name: '🌟 はなこ', score: 10, isEliminated: false },
-            { id: 'demo-p3', name: '✏️ けんた', score: 30, isEliminated: false }
+            { id: 'offline-local-user-id', name: 'あなた（ゲスト）', score: 0 },
+            { id: 'demo-p1', name: 'たろう', score: 20 },
+            { id: 'demo-p2', name: 'はなこ', score: 10 },
+            { id: 'demo-p3', name: 'けんた', score: 30 }
           ]);
           setAnswers([]);
         }
       };
 
-      // 出題開始
-      const startQuestion = async () => {
-        playSound('click');
-
-        if (isOnlineMode) {
-          const batch = db.batch();
-          const answersSnap = await db.collection(`artifacts/${appId}/public/data/answers`).get();
-          answersSnap.forEach((d) => batch.delete(d.ref));
-          await batch.commit();
-
-          const nextIdx = gameState.status === 'lobby' ? 0 : gameState.currentQIndex + 1;
-          if (nextIdx >= questions.length) {
-            await db.doc(`artifacts/${appId}/public/data/game_state/current`).update({ status: 'finished' });
-          } else {
-            await db.doc(`artifacts/${appId}/public/data/game_state/current`).update({
-              status: 'reading_answering',
-              currentQIndex: nextIdx,
-              questionStartTime: Date.now()
-            });
-          }
-        } else {
-          setAnswers([]);
-          const nextIdx = gameState.status === 'lobby' ? 0 : gameState.currentQIndex + 1;
-          if (nextIdx >= questions.length) {
-            setGameState(prev => ({ ...prev, status: 'finished' }));
-          } else {
-            setGameState({
-              status: 'reading_answering',
-              currentQIndex: nextIdx,
-              questionStartTime: Date.now()
-            });
-          }
-        }
-      };
-
-      const stopAnsweringAndShowPoll = async () => {
-        if (isOnlineMode) {
-          await db.doc(`artifacts/${appId}/public/data/game_state/current`).update({ status: 'reveal_poll' });
-        } else {
-          setGameState(prev => ({ ...prev, status: 'reveal_poll' }));
-        }
-      };
-
-      const revealAnswer = async () => {
-        playSound('correct');
-        if (isOnlineMode) {
-          await db.doc(`artifacts/${appId}/public/data/game_state/current`).update({ status: 'reveal_answer' });
-        } else {
-          setGameState(prev => ({ ...prev, status: 'reveal_answer' }));
-        }
-      };
-
-      const revealWorstAndDistributePoints = async () => {
-        const currentQ = questions[gameState.currentQIndex];
-        if (!currentQ) return;
-        const correctAnswers = answers.filter(ans => ans && ans.selectedOption === currentQ.answer);
-
-        if (correctAnswers.length > 0) {
-          const sortedCorrect = [...correctAnswers].sort((a, b) => (b.time || 0) - (a.time || 0));
-          const worstId = sortedCorrect[0]?.playerId;
-
-          if (isOnlineMode) {
-            const batch = db.batch();
-            for (const p of players) {
-              if (p?.id) {
-                const isCorrect = correctAnswers.some(ans => ans.playerId === p.id);
-                const isWorst = p.id === worstId;
-
-                if (isCorrect && !isWorst) {
-                  batch.update(db.doc(`artifacts/${appId}/public/data/players/${p.id}`), { score: (p.score || 0) + 10 });
-                }
-                if (isWorst) {
-                  batch.update(db.doc(`artifacts/${appId}/public/data/players/${p.id}`), { isEliminated: true });
-                }
-              }
-            }
-            await batch.commit();
-          } else {
-            setPlayers(prev => prev.map(p => {
-              const isCorrect = correctAnswers.some(ans => ans.playerId === p.id);
-              const isWorst = p.id === worstId;
-              return {
-                ...p,
-                score: isCorrect && !isWorst ? (p.score || 0) + 10 : (p.score || 0),
-                isEliminated: isWorst ? true : p.isEliminated
-              };
-            }));
-          }
-        }
-
-        if (isOnlineMode) {
-          await db.doc(`artifacts/${appId}/public/data/game_state/current`).update({ status: 'reveal_worst' });
-        } else {
-          setGameState(prev => ({ ...prev, status: 'reveal_worst' }));
-        }
-      };
-
-      // AIモック
+      // デモ用AI追加
       const addMockPlayers = async () => {
         const firstNames = ["佐藤", "鈴木", "高橋", "田中", "渡辺", "伊藤", "山本", "中村", "小林", "加藤"];
         const lastNames = ["たかし", "ゆうた", "しょーた", "まい", "ゆい", "ひな", "れん", "さくら", "たくや", "みさき"];
@@ -855,11 +763,10 @@
           const mockName = `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;
           generated.push({
             id: mockId,
-            name: `🤖 ${mockName}`,
+            name: `${mockName}`, 
             score: Math.floor(Math.random() * 5) * 10,
             joinedAt: Date.now() + i,
-            isMock: true,
-            isEliminated: false
+            isMock: true
           });
         }
 
@@ -870,42 +777,12 @@
           });
           await batch.commit();
         } else {
-          setPlayers(prev => [...generated, ...prev.filter(p => !p.isMock)]);
+          setPlayers(prev => [
+            { id: 'offline-local-user-id', name: playerName || 'あなた（ゲスト）', score: 0 },
+            ...generated
+          ]);
         }
         playSound('click');
-      };
-
-      const simulateMockAnswering = async () => {
-        if (gameState.status !== 'reading_answering') return;
-        const currentQ = questions[gameState.currentQIndex];
-        if (!currentQ) return;
-
-        const generatedAnswers = [];
-        players.forEach((p) => {
-          if (p?.isMock && !p.isEliminated) {
-            const simulatedTime = Math.floor(250 + Math.random() * 9500);
-            const selectCorrect = Math.random() < 0.75;
-            const selectedOption = selectCorrect ? currentQ.answer : (currentQ.answer + 1) % 5;
-            generatedAnswers.push({
-              playerId: p.id,
-              playerName: p.name || '',
-              selectedOption: selectedOption,
-              time: simulatedTime,
-              isCorrect: selectedOption === currentQ.answer,
-              timestamp: Date.now()
-            });
-          }
-        });
-
-        if (isOnlineMode) {
-          const batch = db.batch();
-          generatedAnswers.forEach(ans => {
-            batch.set(db.doc(`artifacts/${appId}/public/data/answers/${ans.playerId}`), ans);
-          });
-          await batch.commit();
-        } else {
-          setAnswers(prev => [...generatedAnswers, ...prev.filter(a => !generatedAnswers.some(g => g.playerId === a.playerId))]);
-        }
       };
 
       const clearMockPlayers = async () => {
@@ -916,676 +793,824 @@
           });
           await batch.commit();
         } else {
-          setPlayers(prev => prev.filter(p => !p.isMock));
+          setPlayers(prev => prev.filter(p => !p.isMock || p.id === 'offline-local-user-id'));
         }
         playSound('click');
       };
 
-      const timerPercentage = (timeLeft / 10) * 100;
+      // 出題開始
+      const startQuestion = async () => {
+        playSound('click');
+        if (isOnlineMode) {
+          const batch = db.batch();
+          const answersSnap = await db.collection(`artifacts/${appId}/public/data/answers`).get();
+          answersSnap.forEach((d) => batch.delete(d.ref));
+          
+          const nextIdx = gameState.status === 'lobby' ? 0 : gameState.currentQIndex + 1;
+          if (nextIdx >= questions.length) {
+            await db.doc(`artifacts/${appId}/public/data/game_state/current`).update({ status: 'finished' });
+          } else {
+            batch.update(db.doc(`artifacts/${appId}/public/data/game_state/current`), {
+              status: 'reading_answering',
+              currentQIndex: nextIdx,
+              questionStartTime: Date.now()
+            });
+          }
+          await batch.commit();
+        } else {
+          setAnswers([]);
+          const nextIdx = gameState.status === 'lobby' ? 0 : gameState.currentQIndex + 1;
+          if (nextIdx >= questions.length) setGameState(prev => ({ ...prev, status: 'finished' }));
+          else setGameState({ status: 'reading_answering', currentQIndex: nextIdx, questionStartTime: Date.now() });
+        }
+      };
+
+      const stopAnsweringAndShowPoll = async () => {
+        if (isOnlineMode) await db.doc(`artifacts/${appId}/public/data/game_state/current`).update({ status: 'reveal_poll' });
+        else setGameState(prev => ({ ...prev, status: 'reveal_poll' }));
+      };
+
+      const revealAnswer = async () => {
+        playSound('correct');
+        if (isOnlineMode) await db.doc(`artifacts/${appId}/public/data/game_state/current`).update({ status: 'reveal_answer' });
+        else setGameState(prev => ({ ...prev, status: 'reveal_answer' }));
+      };
+
+      // 感謝祭最新配点システム加算ロジック【サバイバルロック排除・全員配点ルールへ完全移行】
+      const revealWorstAndDistributePoints = async () => {
+        const currentQ = questions[gameState.currentQIndex];
+        if (!currentQ) return;
+        const correctAnswers = answers.filter(ans => ans && ans.selectedOption === currentQ.answer);
+        
+        // 正解者を早押しが速い順（昇順）にソート
+        const sortedCorrect = [...correctAnswers].sort((a, b) => (a.time || 0) - (a.time || 0));
+        
+        const fastestId = sortedCorrect.length > 0 ? sortedCorrect[0]?.playerId : null;
+        // 正解者が複数(2人以上)の場合のみ最遅ワースト判定を適用。1人の場合は最速ボーナスを優先。
+        const worstId = sortedCorrect.length > 1 ? sortedCorrect[sortedCorrect.length - 1]?.playerId : null;
+
+        if (isOnlineMode) {
+          const batch = db.batch();
+          for (const p of players) {
+            if (p?.id) {
+              const isCorrect = correctAnswers.some(ans => ans.playerId === p.id);
+              const isFastest = p.id === fastestId;
+              const isWorst = p.id === worstId;
+              const pDocRef = db.doc(`artifacts/${appId}/public/data/players/${p.id}`);
+
+              let ptsToAdd = 0;
+              if (isCorrect) {
+                if (isFastest) {
+                  ptsToAdd = 15; // 最速正解：15pt
+                } else if (isWorst) {
+                  ptsToAdd = 1;  // 最遅正解：1pt
+                } else {
+                  ptsToAdd = 10; // 通常正解：10pt
+                }
+              }
+
+              batch.update(pDocRef, { 
+                score: (p.score || 0) + ptsToAdd
+              });
+            }
+          }
+          await batch.commit();
+        } else {
+          // デモ用
+          setPlayers(prev => prev.map(p => {
+            const isCorrect = correctAnswers.some(ans => ans.playerId === p.id);
+            const isFastest = p.id === fastestId;
+            const isWorst = p.id === worstId;
+
+            let ptsToAdd = 0;
+            if (isCorrect) {
+              if (isFastest) ptsToAdd = 15;
+              else if (isWorst) ptsToAdd = 1;
+              else ptsToAdd = 10;
+            }
+            return { 
+              ...p, 
+              score: (p.score || 0) + ptsToAdd 
+            };
+          }));
+        }
+
+        if (isOnlineMode) await db.doc(`artifacts/${appId}/public/data/game_state/current`).update({ status: 'reveal_worst' });
+        else setGameState(prev => ({ ...prev, status: 'reveal_worst' }));
+      };
+
+      const simulateMockAnswering = () => {
+        if (gameState.status !== 'reading_answering') return;
+        const currentQ = questions[gameState.currentQIndex];
+        if (!currentQ) return;
+        const generatedAnswers = [];
+        players.forEach((p) => {
+          if (p?.isMock) {
+            const simulatedTime = Math.floor(250 + Math.random() * 14500); 
+            const selectCorrect = Math.random() < 0.70;
+            const selectedOption = selectCorrect ? currentQ.answer : (currentQ.answer + 1) % 5;
+            generatedAnswers.push({ playerId: p.id, playerName: p.name || '', selectedOption: selectedOption, time: simulatedTime, isCorrect: selectedOption === currentQ.answer, timestamp: Date.now() });
+          }
+        });
+        if (isOnlineMode) {
+          const batch = db.batch();
+          generatedAnswers.forEach(ans => batch.set(db.doc(`artifacts/${appId}/public/data/answers/${ans.playerId}`), ans));
+          batch.commit();
+        } else {
+          setAnswers(prev => [...generatedAnswers, ...prev.filter(a => !generatedAnswers.some(g => g.playerId === a.playerId))]);
+        }
+      };
+
+      // カウントアップ式順位発表の制御
+      const startRankReveal = () => {
+        if (players.length === 0) return;
+        playSound('gong');
+        setRevealRankActive(true);
+        const totalToReveal = Math.min(30, players.length);
+        setRevealRankIndex(totalToReveal - 1);
+      };
+
+      const revealNextRank = () => {
+        if (revealRankIndex > 0) {
+          setRevealRankIndex(prev => prev - 1);
+          playSound('drumroll');
+        } else if (revealRankIndex === 0) {
+          setRevealRankIndex(-1);
+          playSound('gong');
+        }
+      };
+
+      // プレイヤー用5色ボタンのTailwind完全静的マッピング（チラつき・無変化を完全に解消する静的マッパー）
+      const getPlayerButtonClass = (oIdx, isSelected, anySelected, disabled) => {
+        if (isSelected) {
+          return 'bg-gradient-to-b from-amber-400 to-yellow-500 text-slate-950 scale-90 translate-y-[6px] shadow-[0_1px_0_#78350f,0_0_25px_rgba(245,158,11,1)] border-white ring-4 ring-amber-400/50';
+        }
+        if (disabled || anySelected) {
+          return 'bg-slate-900 border-slate-800 text-slate-700 opacity-30 scale-95 shadow-none pointer-events-none';
+        }
+        
+        switch (oIdx) {
+          case 0: return 'bg-gradient-to-b from-blue-500 to-blue-800 shadow-[0_5px_0_#1e3a8a] text-white border-slate-300/30 hover:scale-105 active:scale-95';
+          case 1: return 'bg-gradient-to-b from-red-500 to-red-800 shadow-[0_5px_0_#991b1b] text-white border-slate-300/30 hover:scale-105 active:scale-95';
+          case 2: return 'bg-gradient-to-b from-emerald-500 to-emerald-800 shadow-[0_5px_0_#065f46] text-white border-slate-300/30 hover:scale-105 active:scale-95';
+          case 3: return 'bg-gradient-to-b from-yellow-400 to-yellow-600 shadow-[0_5px_0_#854d0e] text-white border-slate-300/30 hover:scale-105 active:scale-95';
+          case 4: return 'bg-gradient-to-b from-purple-500 to-purple-800 shadow-[0_5px_0_#581c87] text-white border-slate-300/30 hover:scale-105 active:scale-95';
+          default: return '';
+        }
+      };
+
+      const timerPercentage = (timeLeft / 15) * 100;
       const getTimerColorClass = () => {
-        if (timeLeft > 5) return 'bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.7)]';
-        if (timeLeft > 2.5) return 'bg-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.7)]';
+        if (timeLeft > 7) return 'bg-emerald-500 shadow-[0_0_20px_rgba(16,185,129,0.7)]';
+        if (timeLeft > 3.5) return 'bg-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.7)]';
         return 'bg-rose-600 shadow-[0_0_25px_rgba(225,29,72,0.9)] animate-pulse';
       };
 
       const currentQuestion = questions[gameState.currentQIndex] || null;
 
-      // -------------------------------------------------------------
-      // レンダリング
-      // -------------------------------------------------------------
-      return (
-        <div className="min-h-screen bg-slate-950 text-white font-sans flex flex-col justify-between">
-          
-          {/* ヘッダー */}
-          <header className="bg-slate-900/90 backdrop-blur border-b-2 border-amber-500/30 py-4 px-6 sticky top-0 z-50 shadow-[0_4px_20px_rgba(0,0,0,0.5)]">
-            <div className="max-w-7xl mx-auto flex justify-between items-center">
-              <div className="flex items-center space-x-3">
-                <div className="bg-blue-600 text-white p-2 rounded-xl font-black animate-pulse flex items-center justify-center border-2 border-yellow-300 shadow-[0_0_15px_rgba(30,58,138,0.6)]">
-                  <Zap className="w-6 h-6 text-yellow-300" />
-                </div>
-                <div>
-                  <h1 className="text-xl md:text-2xl font-black tracking-wider bg-gradient-to-r from-blue-400 via-amber-400 to-rose-400 bg-clip-text text-transparent uppercase">
-                    オールスター感謝祭風 クイズサバイバル
-                  </h1>
-                  <p className="text-[10px] md:text-xs text-slate-400 hidden sm:block">TBS番組完全模倣：10秒制・割合発表・ワースト足切り・最速決定版</p>
-                </div>
-              </div>
+      // ==========================================
+      // 【華麗な3条件分岐レンダリング】
+      // ==========================================
 
-              <div className="flex items-center space-x-3">
-                <button onClick={() => setIsMuted(!isMuted)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-full transition-all">
-                  {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                </button>
-                {role === 'host' && (
-                  <span className="bg-amber-500/10 border-2 border-amber-500/40 text-amber-300 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 shadow-[0_0_10px_rgba(245,158,11,0.2)]">
-                    <Crown className="w-3.5 h-3.5 text-yellow-400" /> HOST
-                  </span>
-                )}
-                {role === 'player' && hasJoined && (
-                  <span className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                    <Users className="w-3.5 h-3.5" /> {playerName}
-                  </span>
-                )}
-              </div>
-            </div>
-          </header>
-
-          {/* メイングリッド */}
-          <main className="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6 grid grid-cols-1 lg:grid-cols-4 gap-6">
+      // 1. 起動時：役割未選択（!role）のとき。100%確実にログイン画面を表示
+      if (!role) {
+        return (
+          <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center p-4 scanlines select-none overflow-hidden relative">
             
-            {/* 左サイド：スコアボード */}
-            <div className="lg:col-span-1 bg-slate-900/90 border-2 border-slate-800 rounded-2xl p-4 flex flex-col justify-between shadow-2xl min-h-[300px] lg:min-h-0 animate-fade-in">
-              <div>
-                <div className="flex justify-between items-center mb-4 pb-2 border-b border-slate-800">
-                  <h3 className="font-bold text-slate-200 flex items-center gap-2 text-base">
-                    <Users className="w-5 h-5 text-blue-400" />
-                    参加メンバー ({players.length}人)
-                  </h3>
-                  {role === 'host' && (
-                    <div className="flex items-center gap-1 shrink-0">
-                      <button onClick={addMockPlayers} className="p-1 px-2 bg-slate-800 text-slate-300 hover:text-white rounded hover:bg-slate-700 text-[10px] font-bold">
-                        AI30人
-                      </button>
-                      <button onClick={clearMockPlayers} className="p-1 px-1.5 bg-rose-950/40 text-rose-400 hover:text-rose-300 rounded text-[10px] font-bold">
-                        消去
-                      </button>
-                    </div>
-                  )}
-                </div>
+            {/* こっそり端に配置するホスト起動用王冠アイコンリンク（文字なしで隅にこっそり配置） */}
+            <button 
+              onClick={() => { setRole('host'); playSound('click'); }}
+              className="absolute top-4 right-4 text-slate-800 hover:text-amber-500/80 p-2.5 rounded-full transition-all duration-300 hover:scale-110 active:scale-95 z-50 bg-slate-900/50 border border-slate-800"
+              title="管理者ログイン"
+            >
+              <Crown className="w-6 h-6" />
+            </button>
 
-                {players.length === 0 ? (
-                  <div className="text-center py-8 text-slate-500 text-sm">現在、待機中のプレイヤーはいません。</div>
-                ) : (
-                  <div className="space-y-1.5 max-h-[250px] lg:max-h-[520px] overflow-y-auto pr-1">
-                    {players.map((p, idx) => {
-                      if (!p?.id) return null;
-                      const ansObj = answers.find(a => a?.playerId === p.id);
-                      const answeredThisRound = !!ansObj;
-                      const isWorstThisRound = worstPlayer && worstPlayer.id === p.id;
-                      const isEliminatedThisRound = p.isEliminated || (isWorstThisRound && gameState.status === 'reveal_worst');
-
-                      return (
-                        <div key={p.id} className={`flex justify-between items-center px-3 py-2 rounded-lg text-sm transition-all border ${
-                          isEliminatedThisRound 
-                            ? 'bg-rose-950/60 border-rose-500/20 text-rose-300 line-through opacity-80' 
-                            : answeredThisRound && gameState.status === 'reading_answering'
-                            ? 'bg-blue-500/10 border-blue-500/40 text-blue-300 animate-pulse'
-                            : 'bg-slate-800/40 hover:bg-slate-800/70 border-transparent'
-                        }`}>
-                          <div className="flex items-center space-x-2 truncate">
-                            <span className="text-xs text-slate-500 w-5 font-bold">{idx === 0 ? '👑' : `${idx + 1}`}</span>
-                            <span className="truncate font-bold text-slate-200">{p.name || ''}</span>
-                            {p.isMock && <span className="text-[9px] bg-slate-800 text-slate-400 px-1 rounded border border-slate-700">AI</span>}
-                          </div>
-                          <div className="flex items-center space-x-2 shrink-0 font-mono text-xs">
-                            {answeredThisRound && (
-                              <span className="text-emerald-400 font-bold">
-                                {gameState.status === 'reading_answering' ? "回答済" : `${((ansObj.time || 0) / 1000).toFixed(2)}s`}
-                              </span>
-                            )}
-                            <span className="bg-slate-800 px-2 py-0.5 rounded text-xs font-bold text-amber-400">{p.score || 0}pt</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
+            <div className="bg-slate-900/90 border-2 border-slate-800 rounded-3xl p-6 md:p-12 text-center space-y-8 shadow-2xl max-w-md w-full animate-fade-in">
+              <div className="space-y-4">
+                <span className="bg-blue-600/20 border-2 border-blue-400/40 text-blue-300 px-4 py-1.5 rounded-full text-xs font-bold tracking-wider inline-block">ALLSTAR CHAMPIONSHIP</span>
+                <h2 className="text-3xl md:text-4xl font-black tracking-tight leading-none text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-amber-500">免疫学<br />クイズバトル！</h2>
+                <p className="text-slate-400 text-xs md:text-sm leading-relaxed">
+                  早押し15秒の真剣勝負！最速正解者は15pt！最遅正解者は1pt！<br />
+                  獲得ポイントを競うバトル！
+                </p>
               </div>
 
-              {/* シェアURL */}
-              <div className="mt-4 pt-4 border-t border-slate-800">
-                {isLocalFileError && (
-                  <div className="mb-3 bg-amber-500/10 border border-amber-500/30 p-2.5 rounded-lg text-[10px] text-amber-300 leading-normal space-y-1 animate-pulse">
-                    <p className="font-bold flex items-center gap-1">⚠️ C:ドライブから直接開いています</p>
-                    <p>この状態ではスマホと通信できません。GitHub Pages等のウェブサーバーにファイルをアップロードして実行してください。</p>
+              <div className="w-full">
+                <button 
+                  onClick={() => { setRole('player'); playSound('click'); }} 
+                  className="w-full bg-gradient-to-br from-blue-600 to-indigo-800 hover:from-blue-500 hover:to-indigo-700 text-white p-5 rounded-2xl text-center space-y-2 transition-all hover:scale-[1.02] border border-blue-400 shadow-[0_0_15px_rgba(30,58,138,0.4)]"
+                >
+                  <div className="bg-white/10 w-10 h-10 rounded-xl flex items-center justify-center mx-auto mb-2">
+                    <Users className="w-5 h-5 text-blue-300" />
                   </div>
-                )}
-                <div className="bg-slate-950 p-2.5 rounded-lg text-xs space-y-1">
-                  <span className="text-blue-400 block font-bold">📢 この参加URLをスマホで開く：</span>
-                  <input 
-                    type="text" 
-                    readOnly 
-                    value={shareUrl} 
-                    onClick={(e) => { e.currentTarget.select(); document.execCommand('copy'); }}
-                    className="w-full bg-slate-900 border border-slate-800 text-slate-300 px-2 py-1.5 rounded cursor-pointer text-center select-all font-mono font-bold text-[10px] focus:outline-none focus:border-blue-500"
-                  />
-                  <span className="text-[9px] text-slate-400 text-center block">クリックしてコピー</span>
-                </div>
+                  <h4 className="text-base font-black text-slate-100">プレイヤーとして参戦</h4>
+                  <p className="text-[11px] text-slate-300 leading-normal">ニックネームを入力して<br />スマホからクイズに参加！</p>
+                </button>
               </div>
             </div>
+          </div>
+        );
+      }
 
-            {/* 中央コンテンツボード */}
-            <div className="lg:col-span-3 flex flex-col space-y-6">
+      // 2. プレイヤー（role === 'player'）のとき。スマホ専用・縦スクロール完全排除画面
+      if (role === 'player') {
+        const anySelected = myAnswer !== null;
+
+        return (
+          <div className="fixed inset-0 bg-slate-950 p-3 z-50 overflow-hidden flex flex-col justify-between animate-fade-in scanlines">
+            <div className="max-w-md w-full mx-auto flex flex-col justify-between h-full space-y-2">
               
-              {/* 初回・役割選択 */}
-              {!role && (
-                <div className="bg-slate-900 border-2 border-slate-800 rounded-3xl p-6 md:p-12 text-center space-y-8 shadow-2xl flex flex-col justify-center items-center min-h-[520px] animate-fade-in">
-                  <div className="space-y-4 max-w-xl">
-                    <span className="bg-blue-600/20 border-2 border-blue-400/40 text-blue-300 px-4 py-1.5 rounded-full text-xs font-bold tracking-wider inline-block">ALLSTAR QUIS CHAMPIONSHIP</span>
-                    <h2 className="text-3xl md:text-5xl font-black tracking-tight leading-none text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-amber-500">オールスター感謝祭風クイズ</h2>
-                    <p className="text-slate-400 text-sm md:text-base leading-relaxed">
-                      クイズが出題されると、同時に**10秒間のカウントダウン**が開始されます！<br />
-                      スマホで素早くキーパッドをタップして回答してください。<br />
-                      締め切り後、集計発表 ➔ 正解発表 ➔ そして**正答者ワーストタイムの足切り発表**へと移ります。
-                    </p>
+              {!hasJoined ? (
+                <div className="bg-slate-900 border-2 border-slate-800 rounded-2xl p-6 shadow-2xl space-y-6 mt-10">
+                  <div className="text-center space-y-2">
+                    <Users className="w-12 h-12 text-blue-400 mx-auto" />
+                    <h3 className="text-xl font-black">プレイヤーエントリー</h3>
+                    <p className="text-sm text-slate-400">クイズ大会で使用するニックネームを入力してください。</p>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl">
-                    <button onClick={() => { setRole('host'); playSound('click'); }} className="bg-gradient-to-br from-blue-600 to-indigo-800 hover:from-blue-500 hover:to-indigo-700 text-white p-6 rounded-2xl text-left space-y-3 transition-all hover:scale-[1.02] border-2 border-blue-400 shadow-[0_0_20px_rgba(30,58,138,0.5)]">
-                      <div className="bg-white/10 w-12 h-12 rounded-xl flex items-center justify-center"><Crown className="w-6 h-6 text-yellow-300" /></div>
-                      <div>
-                        <h4 className="text-lg font-black">主催者（ホスト）として起動</h4>
-                        <p className="text-xs text-slate-200/80 leading-normal mt-1">プロジェクター・大画面用。10秒タイマー、回答割合、正解のピカピカ点滅演出、正答者ワーストサバイバル発表を大画面に映し出します。</p>
-                      </div>
-                    </button>
-                    <button onClick={() => { setRole('player'); playSound('click'); }} className="bg-slate-800 border-2 border-slate-700 hover:bg-slate-700/80 text-white p-6 rounded-2xl text-left space-y-3 transition-all hover:scale-[1.02]">
-                      <div className="bg-blue-500/10 w-12 h-12 rounded-xl flex items-center justify-center"><Users className="w-6 h-6 text-blue-400" /></div>
-                      <div>
-                        <h4 className="text-lg font-black text-slate-100">プレイヤーとして参戦</h4>
-                        <p className="text-xs text-slate-400 leading-normal mt-1">スマホから参加！10秒以内にキーパッドを最速タップして、誤答・ワースト脱落の恐怖に立ち向かいます。</p>
-                      </div>
-                    </button>
-                  </div>
+                  <form onSubmit={joinGame} className="space-y-4">
+                    <input type="text" required maxLength={15} placeholder="例：早押し名人" value={playerName} onChange={(e) => setPlayerName(e.target.value)} className="w-full bg-slate-950 border border-slate-800 focus:border-blue-500 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-bold text-lg" />
+                    <button type="submit" className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-xl text-base font-black tracking-wider shadow-lg">サバイバルにエントリー</button>
+                  </form>
                 </div>
-              )}
-
-              {/* ホスト管理画面 */}
-              {role === 'host' && (
-                <div className="space-y-6 animate-fade-in">
+              ) : (
+                <div className="flex flex-col justify-between h-full space-y-2">
                   
-                  {/* 操作ボード */}
-                  <div className="bg-slate-900 border-2 border-slate-800 rounded-2xl p-6 shadow-2xl">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
-                      <div>
-                        <span className="text-[10px] text-amber-400 font-black uppercase tracking-wider block">TBSクイズ進行システム</span>
-                        <h2 className="text-xl md:text-2xl font-black flex items-center gap-2">
-                          ゲームステータス: 
-                          <span className="text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full text-sm font-bold border border-blue-500/20">
-                            {gameState.status === 'lobby' && "待機ロビー"}
-                            {gameState.status === 'reading_answering' && "10秒回答中"}
-                            {gameState.status === 'reveal_poll' && "割合チェック"}
-                            {gameState.status === 'reveal_answer' && "正解発表"}
-                            {gameState.status === 'reveal_worst' && "最遅ワースト発表"}
-                            {gameState.status === 'finished' && "終了"}
-                          </span>
-                        </h2>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <button onClick={openQuestionEditor} className="px-4 py-2 bg-indigo-600/20 border border-indigo-500/50 text-indigo-300 hover:bg-indigo-600/30 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all">
-                          <EditIcon className="w-4 h-4" /> クイズを作成・編集 (20問)
-                        </button>
-                        <button onClick={resetGame} className="px-4 py-2 border border-rose-500/30 text-rose-400 hover:bg-rose-500/10 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all">
-                          <RefreshCw className="w-4 h-4" /> リセット
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* コントロールステップボタン */}
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-3 bg-slate-950 p-4 rounded-xl border border-slate-800">
-                      
-                      <button onClick={startQuestion} disabled={gameState.status === 'reading_answering' || gameState.status === 'reveal_poll' || gameState.status === 'reveal_answer'} className={`p-4 rounded-lg flex flex-col items-center justify-center text-center space-y-1 transition-all ${gameState.status === 'lobby' || gameState.status === 'reveal_worst' ? 'bg-blue-600 hover:bg-blue-700 text-white font-bold ring-2 ring-blue-400' : 'bg-slate-800 text-slate-400 cursor-not-allowed'}`}>
-                        <span className="text-[9px] opacity-75">STEP 1</span>
-                        <span className="font-black text-xs">{gameState.status === 'lobby' ? "第1問を出題" : "次の問題を出題"}</span>
-                      </button>
-
-                      <button onClick={stopAnsweringAndShowPoll} disabled={gameState.status !== 'reading_answering'} className={`p-4 rounded-lg flex flex-col items-center justify-center text-center space-y-1 transition-all ${gameState.status === 'reading_answering' ? 'bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold ring-2 ring-amber-400 animate-pulse' : 'bg-slate-800 text-slate-400 cursor-not-allowed'}`}>
-                        <span className="text-[9px] opacity-75">STEP 2</span>
-                        <span className="font-black text-xs">アンサーチェック(割合)</span>
-                      </button>
-
-                      <button onClick={revealAnswer} disabled={gameState.status !== 'reveal_poll'} className={`p-4 rounded-lg flex flex-col items-center justify-center text-center space-y-1 transition-all ${gameState.status === 'reveal_poll' ? 'bg-emerald-600 hover:bg-emerald-700 text-white font-bold ring-2 ring-emerald-400' : 'bg-slate-800 text-slate-400 cursor-not-allowed'}`}>
-                        <span className="text-[9px] opacity-75">STEP 3</span>
-                        <span className="font-black text-xs">正解発表 (点灯)</span>
-                      </button>
-
-                      <button onClick={revealWorstAndDistributePoints} disabled={gameState.status !== 'reveal_answer'} className={`p-4 rounded-lg flex flex-col items-center justify-center text-center space-y-1 transition-all ${gameState.status === 'reveal_answer' ? 'bg-rose-600 hover:bg-rose-700 text-white font-bold ring-2 ring-rose-400' : 'bg-slate-800 text-slate-400 cursor-not-allowed'}`}>
-                        <span className="text-[9px] opacity-75">STEP 4</span>
-                        <span className="font-black text-xs">早押しワースト足切り</span>
-                      </button>
-
-                    </div>
-
-                    <div className="mt-4 p-3 bg-slate-900 border border-dashed border-blue-500/30 rounded-xl flex flex-col sm:flex-row justify-between items-center gap-3">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xs bg-blue-500/20 text-blue-300 px-2.5 py-1 rounded font-bold">デバッグテスト</span>
-                        <p className="text-xs text-slate-400">10秒カウントダウン中にAIを自動回答させます：</p>
-                      </div>
-                      <button onClick={simulateMockAnswering} disabled={gameState.status !== 'reading_answering'} className="px-4 py-1.5 bg-blue-500/20 hover:bg-blue-500/30 text-blue-300 rounded border border-blue-500/30 disabled:opacity-30 text-xs font-black transition-all">AI全員回答</button>
-                    </div>
+                  {/* アッパー情報バー */}
+                  <div className="bg-slate-900 border border-slate-800 rounded-xl p-2 flex justify-between items-center text-xs font-bold shrink-0">
+                    <span className="flex items-center gap-1 truncate max-w-[120px]"><Users className="w-3.5 h-3.5 text-emerald-400" />{playerName}</span>
+                    <span className="bg-slate-950 px-3 py-1 rounded-full text-amber-400 font-mono">得点: {players.find(p => p.id === user?.uid)?.score || 0} pt</span>
                   </div>
 
-                  {/* 20問クイズ編集モーダル */}
-                  {isEditingQuestions && (
-                    <div className="bg-slate-900 border-2 border-slate-800 rounded-3xl p-6 shadow-2xl space-y-6 animate-fade-in relative z-50">
-                      <div className="flex justify-between items-center border-b border-slate-800 pb-3">
-                        <h3 className="text-lg font-black text-indigo-400 flex items-center gap-2"><EditIcon className="w-5 h-5" /> 問題作成・編集ボード</h3>
-                        <button onClick={() => setIsEditingQuestions(false)} className="text-slate-400 hover:text-white text-base font-bold">✕ 閉じる</button>
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                        <div className="md:col-span-1 border-r border-slate-800 pr-2 space-y-1 max-h-[380px] overflow-y-auto">
-                          {questions.map((q, idx) => (
-                            <button key={idx} onClick={() => { saveSelectedEdit(); loadQuestionToEdit(idx); }} className={`w-full text-left px-3 py-2 rounded-lg text-xs font-bold transition-all truncate block ${selectedEditIndex === idx ? 'bg-indigo-600 text-white' : 'bg-slate-800/50 hover:bg-slate-800'}`}>
-                              第 {idx + 1} 問: {q.text || "(未入力)"}
-                            </button>
-                          ))}
-                        </div>
-                        <div className="md:col-span-3 space-y-4">
-                          <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
-                            <span className="text-xs bg-indigo-500/20 text-indigo-400 px-3 py-1 rounded font-bold">第 {selectedEditIndex + 1} 問を編集</span>
-                            <textarea value={editQuestionText} onChange={(e) => setEditQuestionText(e.target.value)} rows={2} className="w-full bg-slate-900 border border-slate-800 rounded-lg p-2.5 text-xs text-white focus:outline-none" />
-                            <div className="space-y-2">
-                              {editOptions.map((opt, oIdx) => (
-                                <div key={oIdx} className="flex items-center space-x-2">
-                                  <input type="text" value={opt} onChange={(e) => { const next = [...editOptions]; next[oIdx] = e.target.value; setEditOptions(next); }} className="flex-grow bg-slate-900 border border-slate-800 rounded-lg p-2 text-xs text-white" />
-                                  <input type="radio" name="editCorrect" checked={editAnswerIndex === oIdx} onChange={() => setEditAnswerIndex(oIdx)} className="w-4 h-4 text-indigo-600" />
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          <div className="flex justify-end space-x-2">
-                            <button onClick={saveAllQuestionsToCloud} className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-black shadow-md">クラウドへ保存して同期</button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* クイズメイン画面 (プロジェクター用) */}
-                  {!isEditingQuestions && gameState.status !== 'lobby' && gameState.status !== 'finished' && (
-                    <div className="bg-slate-900 border-4 border-slate-800 rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl relative overflow-hidden animate-fade-in">
-                      
-                      {/* READY GO! の巨大アニメーション */}
-                      {gameState.status === 'reading_answering' && timeLeft > 8.5 && (
-                        <div className="absolute inset-0 bg-slate-950/95 flex flex-col items-center justify-center z-40 animate-fade-in">
-                          <div className="bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-slate-950 font-black text-5xl md:text-7xl py-6 px-12 rounded-2xl shadow-[0_0_50px_rgba(245,158,11,0.6)] border-4 border-white tracking-widest animate-banner">
-                            READY GO!
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="flex justify-between items-center pb-4 border-b-2 border-slate-800">
-                        <span className="text-blue-400 font-extrabold text-xl tracking-wider">QUESTION {gameState.currentQIndex + 1} / {questions.length}</span>
-                        <span className="text-sm text-slate-400">回答者数: <b className="text-white text-lg">{answers.length} / {players.length}人</b></span>
-                      </div>
-
-                      {/* 10秒タイマー（おなじみのカラーゲージ同期） */}
-                      {gameState.status === 'reading_answering' && (
-                        <div className="space-y-2">
-                          <div className="flex justify-between items-center">
-                            <span className="text-xs text-slate-400 font-bold tracking-widest">COUNTDOWN TIMER</span>
-                            <span className="text-4xl font-black text-yellow-400 lcd-number bg-black/80 px-4 py-1.5 rounded-lg border border-yellow-500/20 font-mono tracking-widest">
-                              {timeLeft.toFixed(2)}
-                            </span>
-                          </div>
-                          <div className="w-full bg-slate-950 h-6 rounded-full overflow-hidden border-2 border-slate-800 p-0.5 shadow-inner">
-                            <div className={`h-full rounded-full transition-all duration-75 ${getTimerColorClass()}`} style={{ width: `${timerPercentage}%` }} />
-                          </div>
-                        </div>
-                      )}
-
-                      {/* タイムアップ表示 */}
-                      {gameState.status === 'reading_answering' && timeLeft <= 0 && (
-                        <div className="bg-rose-950/80 border-2 border-rose-500 p-4 rounded-xl text-center animate-pulse">
-                          <span className="text-xl font-black text-rose-400">タイムアップ！回答を締め切りました。</span>
-                        </div>
-                      )}
-
-                      {/* 問題文 */}
-                      <div className="py-8 text-center border-y-2 border-slate-800 bg-slate-950/70 rounded-2xl p-4 shadow-inner">
-                        <h2 className="text-2xl md:text-4xl font-black text-yellow-100 leading-normal tracking-wide">
-                          {currentQuestion?.text}
-                        </h2>
-                      </div>
-
-                      {/* 5拓選択肢 */}
-                      <div className="grid grid-cols-1 gap-3.5 max-w-3xl mx-auto">
-                        {currentQuestion?.options.map((opt, oIdx) => {
-                          const isCorrect = oIdx === currentQuestion.answer;
-                          const isPollState = gameState.status === 'reveal_poll';
-                          const isAnswerState = gameState.status === 'reveal_answer' || gameState.status === 'reveal_worst';
-                          const choiceCount = answers.filter(a => a && a.selectedOption === oIdx).length;
-                          const percentage = Math.round((choiceCount / (answers.length || 1)) * 100);
-
-                          const colorClasses = [
-                            'border-blue-500/40 bg-blue-950/30 text-blue-200',
-                            'border-rose-500/40 bg-rose-950/30 text-rose-200',
-                            'border-emerald-500/40 bg-emerald-950/30 text-emerald-200',
-                            'border-yellow-500/40 bg-yellow-950/30 text-yellow-200',
-                            'border-purple-500/40 bg-purple-950/30 text-purple-200'
-                          ];
-
-                          const highlightClass = isAnswerState && isCorrect
-                            ? 'border-emerald-500 bg-emerald-950/60 text-emerald-100 ring-4 ring-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.6)] animate-flash'
-                            : colorClasses[oIdx];
-
-                          return (
-                            <div key={oIdx} className={`p-4.5 rounded-2xl border-2 relative overflow-hidden transition-all duration-300 ${highlightClass}`}>
-                              
-                              {(isPollState || isAnswerState) && (
-                                <div className={`absolute left-0 top-0 bottom-0 opacity-25 transition-all duration-1000 ${isAnswerState && isCorrect ? 'bg-emerald-500' : 'bg-blue-500'}`} style={{ width: `${percentage}%` }} />
-                              )}
-
-                              <div className="relative z-10 flex justify-between items-center">
-                                <span className="font-extrabold flex items-center space-x-4 text-xl">
-                                  <span className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-black border-2 ${
-                                    isAnswerState && isCorrect ? 'bg-emerald-500 text-slate-950 border-white' : 'bg-slate-900 border-slate-700'
-                                  }`}>{oIdx + 1}</span>
-                                  <span>{opt}</span>
-                                </span>
-
-                                {(isPollState || isAnswerState) && (
-                                  <div className="flex items-center space-x-4 font-mono shrink-0">
-                                    <span className="text-sm text-slate-400 font-bold">{choiceCount}人</span>
-                                    <span className={`text-2xl font-black ${isAnswerState && isCorrect ? 'text-emerald-400' : 'text-blue-400'}`}>{percentage}%</span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {/* 早押しワースト ➔ チャンピオン発表 */}
-                      {gameState.status === 'reveal_worst' && (
-                        <div className="bg-slate-950 p-6 rounded-2xl border-2 border-slate-800 space-y-6 relative min-h-[360px] flex flex-col justify-center items-center shadow-inner">
-                          
-                          {revealStage === 'showing_losers' && (
-                            <div className="w-full max-w-2xl text-center space-y-4">
-                              <h3 className="text-base text-rose-400 font-black uppercase flex items-center justify-center gap-2 animate-pulse">
-                                <ShieldAlert className="w-5 h-5" />
-                                早押し最遅ワースト候補を発表中...
-                              </h3>
-                              <div className="grid grid-cols-2 md:grid-cols-5 gap-2">
-                                {visibleLosers.map((p, i) => (
-                                  <div key={p.id} className="bg-slate-900 border border-rose-500/20 p-2.5 rounded-lg flex flex-col items-center">
-                                    <span className="text-[10px] text-slate-500 font-bold">下位{11 - i}番目</span>
-                                    <span className="text-xs font-bold text-slate-300 truncate w-full text-center">{p.name || ''}</span>
-                                    <span className="text-[10px] text-rose-400 mt-1">{((p.time || 0) / 1000).toFixed(2)}秒</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {revealStage === 'waiting_worst' && (
-                            <div className="text-center space-y-4">
-                              <h3 className="text-xl font-bold text-indigo-400 tracking-wider">早押し最遅（次回1問お休みロック）の決定まで...</h3>
-                              <div className="text-8xl font-black text-indigo-500 animate-pulse font-mono">{countdownNum}</div>
-                            </div>
-                          )}
-
-                          {revealStage === 'showing_worst' && (
-                            <div className="w-full space-y-8 animate-fade-in text-center">
-                              
-                              {fastestPlayer && (
-                                <div className="bg-gradient-to-r from-yellow-500/10 via-yellow-500/20 to-yellow-500/10 border-2 border-yellow-500/40 p-5 rounded-2xl max-w-xl mx-auto space-y-2 shadow-lg">
-                                  <div className="flex items-center justify-center gap-2">
-                                    <Crown className="w-6 h-6 text-yellow-400 animate-bounce" />
-                                    <span className="text-sm text-yellow-300 font-extrabold tracking-widest uppercase">FASTEST CHAMPION</span>
-                                  </div>
-                                  <h4 className="text-2xl md:text-3.5xl font-black text-yellow-300">
-                                    {fastestPlayer.name} さん
-                                  </h4>
-                                  <p className="text-xs text-slate-400">
-                                    早押しタイム: <b className="text-white text-lg font-mono">{((fastestPlayer.time || 0) / 1000).toFixed(3)}</b> 秒で最速正解！
-                                  </p>
-                                </div>
-                              )}
-
-                              {worstPlayer && (
-                                <div className="space-y-4 max-w-xl mx-auto">
-                                  <div className="bg-indigo-600 text-white px-4 py-1.5 rounded-full text-xs font-black tracking-widest inline-block animate-pulse">
-                                    📢 TOUCH OF THE DELAY
-                                  </div>
-                                  <div className="space-y-1">
-                                    <p className="text-xs text-slate-400 font-bold">正解者の中で最も回答が遅かったのは...</p>
-                                    <div className="text-3xl md:text-5xl font-black text-indigo-400 animate-flash py-4 px-6 border-4 border-indigo-500 rounded-2xl bg-indigo-500/10 inline-block w-full truncate">
-                                      {worstPlayer.name} さん
-                                    </div>
-                                    <p className="text-xs text-slate-400">タイム: {((worstPlayer.time || 0) / 1000).toFixed(3)}秒</p>
-                                  </div>
-
-                                  <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl text-xs leading-normal">
-                                    正解したものの回答時間が最も遅かったため、次回1問お休みとなります。<br />
-                                    <b>その他の正答者全員に10ポイントが付与されました！</b>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          )}
-
-                          {revealStage === 'idle' && !worstPlayer && (
-                            <div className="text-center py-8 space-y-3">
-                              <AlertTriangle className="w-12 h-12 text-rose-500 mx-auto" />
-                              <h4 className="text-2xl font-black text-rose-400">全員不正解！</h4>
-                              <p className="text-sm text-slate-400">正解したプレイヤーがいなかったため、お休み等の足切りはありません。次へ進みましょう！</p>
-                            </div>
-                          )}
-
-                        </div>
-                      )}
-
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* ゲーム終了画面 */}
-              {gameState.status === 'finished' && (
-                <div className="bg-slate-900 border-2 border-slate-800 rounded-3xl p-8 text-center space-y-6 shadow-2xl animate-fade-in">
-                  <Award className="w-20 h-20 text-yellow-400 mx-auto animate-bounce" />
-                  <h2 className="text-3xl md:text-5xl font-black">サバイバルクイズ終了！</h2>
-                  <div className="max-w-md mx-auto bg-slate-950 p-5 rounded-2xl border-2 border-slate-800 divide-y divide-slate-800">
-                    {players.slice(0, 5).map((p, idx) => (
-                      <div key={p.id} className="flex justify-between items-center py-3">
-                        <span className="font-bold text-blue-400">{idx + 1}位 {p.name}</span>
-                        <span className="text-amber-400 font-extrabold">{p.score || 0} pt</span>
-                      </div>
-                    ))}
-                  </div>
-                  <button onClick={resetGame} className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg mt-4">ロビーに戻って再戦</button>
-                </div>
-              )}
-
-              {/* ロビー画面 */}
-              {gameState.status === 'lobby' && !isEditingQuestions && (
-                <div className="bg-slate-900 border-2 border-slate-800 rounded-3xl p-6 md:p-12 text-center space-y-6 shadow-xl flex flex-col justify-center items-center min-h-[400px] animate-fade-in">
-                  <div className="animate-pulse bg-blue-500/10 p-4 rounded-full border border-blue-500/20">
-                    <Users className="w-12 h-12 text-blue-400" />
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-2xl font-black">参加者エントリー待機中...</h3>
-                    <p className="text-slate-400 text-sm max-w-md">
-                      参加者が集まると、左側のリストにリアルタイムで追加されます。準備ができたら「ゲームを開始する」を押してください。
-                    </p>
-                  </div>
-                  <button onClick={startQuestion} disabled={players.length === 0} className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 disabled:opacity-40 disabled:cursor-not-allowed text-white text-base font-black rounded-2xl shadow-lg transition-all">
-                    ゲームを開始する (第1問へ)
-                  </button>
-                </div>
-              )}
-            </div>
-          </main>
-
-          {/* スマホから参加したプレイヤーの画面 */}
-          {role === 'player' && (
-            <div className="fixed inset-0 bg-slate-950 p-4 z-50 overflow-y-auto flex flex-col justify-between animate-fade-in">
-              <div className="max-w-md w-full mx-auto space-y-6">
-                
-                {/* ログイン・名前入力 */}
-                {!hasJoined && (
-                  <div className="bg-slate-900 border-2 border-slate-800 rounded-2xl p-6 shadow-2xl space-y-6 mt-10">
-                    <div className="text-center space-y-2">
-                      <Users className="w-12 h-12 text-blue-400 mx-auto" />
-                      <h3 className="text-xl font-black">プレイヤーエントリー</h3>
-                      <p className="text-sm text-slate-400">クイズバトルで使用するお好みのニックネームを入力してください。</p>
-                    </div>
-                    <form onSubmit={joinGame} className="space-y-4">
-                      <input 
-                        type="text" 
-                        required
-                        maxLength={15}
-                        placeholder="例：早押し王"
-                        value={playerName}
-                        onChange={(e) => setPlayerName(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 focus:border-blue-500 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-bold text-lg"
-                      />
-                      <button type="submit" className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white rounded-xl text-base font-black tracking-wider shadow-lg active:scale-95 transition-all">
-                        サバイバルに参戦する
-                      </button>
-                    </form>
-                  </div>
-                )}
-
-                {/* 参加後の表示 */}
-                {hasJoined && (
-                  <div className="space-y-6">
-                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-3 flex justify-between items-center text-sm">
-                      <span className="font-bold flex items-center gap-1.5"><Users className="w-4 h-4 text-emerald-400" />{playerName}</span>
-                      <span className="bg-slate-950 px-3 py-1 rounded-full text-xs font-bold text-amber-400">
-                        スコア: {players.find(p => p.id === user?.uid)?.score || 0} pt
-                      </span>
-                    </div>
-
-                    {/* ロビー待機 */}
+                  {/* モバイルビューコンテンツ。スクロールを絶対に発生させないよう高さを高度に制御 */}
+                  <div className="flex-grow flex flex-col justify-center overflow-hidden">
+                    
                     {gameState.status === 'lobby' && (
-                      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center space-y-4 shadow-xl">
-                        <div className="animate-spin text-blue-400 inline-block"><RefreshCw className="w-10 h-10" /></div>
-                        <h3 className="text-lg font-black">ホストが開始するのを待っています...</h3>
-                        <p className="text-sm text-slate-400">大画面を見ながら少々お待ちください。</p>
+                      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-center space-y-3">
+                        <div className="animate-spin text-blue-400 inline-block"><RefreshCw className="w-8 h-8" /></div>
+                        <h3 className="text-sm font-black text-slate-300">ホストの出題を待っています...</h3>
+                        <p className="text-[10px] text-slate-400">大画面を見ながら少々お待ちください。</p>
                       </div>
                     )}
 
-                    {/* クイズ回答キーパッド */}
                     {gameState.status === 'reading_answering' && currentQuestion && (
-                      <div className="bg-slate-900 border-2 border-slate-800 rounded-2xl p-6 space-y-6 shadow-xl text-center">
-                        {isEliminated ? (
-                          <div className="py-10 space-y-4 bg-slate-950 rounded-xl border border-indigo-500/20 animate-pulse">
-                            <AlertTriangle className="w-16 h-16 text-indigo-400 mx-auto" />
-                            <h4 className="text-xl font-black text-indigo-400">次回回答お休み中</h4>
-                            <p className="text-xs text-slate-400 px-4 leading-relaxed">前回の問題で「正答者ワースト（最も遅かった）」だったため、今回は回答お休み（ロック）となります。プロジェクター画面でクイズをお楽しみください！</p>
-                          </div>
-                        ) : (
-                          <div className="space-y-6">
-                            <div className="inline-block bg-slate-950 px-4 py-2 rounded-xl border border-slate-800 font-mono">
-                              <span className="text-xs text-slate-400 block">残り回答時間</span>
-                              <span className={`text-3xl font-black ${timeLeft <= 3 ? 'text-rose-500 animate-ping' : 'text-white'}`}>{timeLeft.toFixed(2)}s</span>
-                            </div>
-                            
-                            <h3 className="text-lg font-black tracking-wide">急いで正しい選択肢をタップ！</h3>
+                      <div className="bg-slate-900 border-2 border-slate-800 rounded-2xl p-3 shadow-xl flex flex-col justify-between max-h-[80vh] space-y-3 overflow-hidden">
+                        
+                        <div className="inline-block bg-slate-950 px-3 py-1 rounded-xl border border-slate-800 font-mono mx-auto self-center shrink-0">
+                          <span className="text-[8px] text-slate-400 block text-center">残り時間</span>
+                          <span className={`text-xl font-black ${timeLeft <= 3 ? 'text-rose-500 animate-ping' : 'text-white'}`}>{timeLeft.toFixed(2)}s</span>
+                        </div>
 
-                            <div className="flex justify-center items-center gap-2 max-w-sm mx-auto py-4">
-                              {[0, 1, 2, 3, 4].map((oIdx) => {
-                                const isSelected = myAnswer === oIdx;
-                                
-                                const buttonColors = [
-                                  'from-blue-500 to-blue-800 shadow-[0_6px_0_#1e3a8a]',
-                                  'from-red-500 to-red-800 shadow-[0_6px_0_#991b1b]',
-                                  'from-emerald-500 to-emerald-800 shadow-[0_6px_0_#065f46]',
-                                  'from-yellow-400 to-yellow-600 shadow-[0_6px_0_#854d0e]',
-                                  'from-purple-500 to-purple-800 shadow-[0_6px_0_#581c87]'
-                                ];
-
-                                const selectedStyle = isSelected 
-                                  ? 'bg-gradient-to-b from-amber-400 to-yellow-500 text-slate-950 scale-95 translate-y-[4px] shadow-[0_2px_0_#78350f,0_0_20px_rgba(245,158,11,0.8)] border-white'
-                                  : hasAnswered || timeLeft <= 0
-                                  ? 'bg-slate-950 border-slate-900 text-slate-700 cursor-not-allowed opacity-20'
-                                  : `bg-gradient-to-b ${buttonColors[oIdx]} text-white border-slate-300/40`;
-
-                                return (
-                                  <button 
-                                    key={oIdx} 
-                                    onClick={() => handleAnswerSelect(oIdx)}
-                                    disabled={hasAnswered || timeLeft <= 0}
-                                    className={`w-14 h-14 md:w-16 md:h-16 rounded-full border-4 font-black text-2xl tracking-widest transition-all select-none flex items-center justify-center shadow-lg ${selectedStyle}`}
-                                  >
-                                    {oIdx + 1}
-                                  </button>
-                                );
-                              })}
-                            </div>
-
-                            {hasAnswered && myAnswer !== null && (
-                              <div className="text-center bg-slate-950 p-4 rounded-xl border border-slate-800 animate-fade-in">
-                                <span className="text-xs text-slate-400 block">選択した回答番号</span>
-                                <span className="text-4xl font-black text-amber-400 font-mono block py-1">{myAnswer + 1}</span>
-                                <span className="text-xs text-slate-500">早押しタイム: {((myAnswerTime || 0) / 1000).toFixed(3)}s</span>
+                        {/* 問題文 ＆ 選択肢 (高さをスマホ用に極限まで絞り、絶対にスクロールを排除) */}
+                        <div className="bg-slate-950/90 border border-slate-800 rounded-xl p-2.5 text-left space-y-1.5 max-h-[150px] overflow-y-auto no-scrollbar shrink-0">
+                          <p className="text-[11px] font-black text-yellow-100 leading-snug border-b border-slate-800/60 pb-1 shrink-0">
+                            Q{gameState.currentQIndex + 1}: {currentQuestion.text}
+                          </p>
+                          <div className="space-y-1 text-[10px] text-slate-300 font-medium">
+                            {currentQuestion.options.map((opt, idx) => (
+                              <div 
+                                key={idx} 
+                                className={`p-1 rounded flex items-center gap-1.5 transition-all ${
+                                  myAnswer === idx 
+                                    ? 'bg-amber-500/25 text-amber-300 font-bold border border-amber-500/30' 
+                                    : 'border border-transparent'
+                                }`}
+                              >
+                                <span className="w-4 h-4 rounded-full bg-slate-900 text-slate-400 flex items-center justify-center text-[9px] font-black shrink-0">
+                                  {idx + 1}
+                                </span>
+                                <span className="truncate">{opt}</span>
                               </div>
-                            )}
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <h3 className="text-[10px] font-black tracking-wide text-slate-400 text-center shrink-0">正しい番号をタップしてください！</h3>
+
+                        {/* おなじみの5色丸キーパッド：選択後に他のボタンがグレーアウト（透明度30%）にする極上フィードバック */}
+                        <div className="flex justify-center items-center gap-1.5 max-w-sm mx-auto py-1.5 shrink-0">
+                          {[0, 1, 2, 3, 4].map((oIdx) => {
+                            const isSelected = myAnswer === oIdx;
+                            const isKeypadDisabled = hasAnswered || timeLeft <= 0;
+
+                            return (
+                              <button 
+                                key={oIdx} 
+                                onClick={() => handleAnswerSelect(oIdx)} 
+                                disabled={isKeypadDisabled} 
+                                className={`w-12 h-12 rounded-full border-4 font-black text-lg transition-all flex items-center justify-center shadow-md ${getPlayerButtonClass(oIdx, isSelected, anySelected, isKeypadDisabled)}`}
+                              >
+                                {oIdx + 1}
+                              </button>
+                            );
+                          })}
+                        </div>
+
+                        {hasAnswered && myAnswer !== null && (
+                          <div className="bg-slate-950 p-2 rounded-lg border border-slate-800 text-[10px] flex justify-between items-center px-4 shrink-0">
+                            <span className="text-slate-400 font-bold">送信キー: <b className="text-amber-400 text-sm font-mono">{myAnswer + 1}</b></span>
+                            <span className="text-slate-500 font-mono">Time: {((myAnswerTime || 0)/1000).toFixed(3)}s</span>
                           </div>
                         )}
                       </div>
                     )}
 
-                    {/* 集計割合発表中 */}
                     {gameState.status === 'reveal_poll' && (
-                      <div className="bg-slate-900 border-2 border-slate-800 rounded-2xl p-6 text-center space-y-4 shadow-xl">
-                        <BarChart className="w-12 h-12 text-blue-400 mx-auto animate-bounce" />
-                        <h3 className="text-xl font-black">回答締め切り！集計割合を発表中...</h3>
-                        <p className="text-sm text-slate-400">大画面でみんなの選んだ回答割合を発表しています。</p>
+                      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 text-center space-y-2">
+                        <BarChart className="w-10 h-10 text-blue-400 mx-auto animate-bounce" />
+                        <h3 className="text-sm font-black">回答締め切り！</h3>
+                        <p className="text-[11px] text-slate-400">プロジェクター大画面で回答比率をチェック！</p>
                       </div>
                     )}
 
-                    {/* 正解発表 */}
                     {gameState.status === 'reveal_answer' && currentQuestion && (
-                      <div className="bg-slate-900 border-2 border-slate-800 rounded-2xl p-6 text-center space-y-6 shadow-xl">
-                        <h3 className="text-lg font-bold text-slate-400">クイズ正解発表</h3>
+                      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-center space-y-3">
+                        <h4 className="text-xs font-bold text-slate-400">アンサーチェック結果</h4>
                         {isCorrectLocal ? (
-                          <div className="space-y-3">
-                            <CheckCircle className="w-16 h-16 text-emerald-400 mx-auto animate-bounce" />
-                            <h4 className="text-3xl font-black text-emerald-400">見事、正解！</h4>
-                            <p className="text-sm text-slate-300">しかし安心はできません。この後の「早押しワースト足切り発表」で最下位になると次回お休みになります。</p>
+                          <div className="space-y-1">
+                            <CheckCircle className="w-12 h-12 text-emerald-400 mx-auto animate-bounce" />
+                            <h4 className="text-xl font-black text-emerald-400">正解！</h4>
+                            <p className="text-[11px] text-slate-300">早押しが最速なら15pt！最遅でなければ10pt獲得です！</p>
                           </div>
                         ) : (
-                          <div className="space-y-4 bg-slate-950/80 p-6 rounded-2xl border border-blue-500/30">
-                            <XCircle className="w-16 h-16 text-amber-500 mx-auto" />
-                            <h4 className="text-2xl font-black text-amber-400">おしい！ポイント獲得ならず</h4>
-                            <p className="text-sm text-slate-300">
+                          <div className="bg-slate-950 p-3 rounded-xl border border-blue-500/20 space-y-1">
+                            <h4 className="text-lg font-black text-amber-400">不正解 (0pt)</h4>
+                            <p className="text-[11px] text-slate-300">
                               あなたの選択: <b className="text-rose-400">{myAnswer !== null ? myAnswer + 1 : "未回答(タイムオーバー)"}</b><br />
                               正解は: <b className="text-emerald-400">{currentQuestion.answer + 1}</b>
                             </p>
-                            <p className="text-xs text-emerald-400 font-bold uppercase tracking-wider mt-2">
-                              ※回答権は失われません！次の問題もスマホから回答できます。がんばりましょう！
-                            </p>
                           </div>
                         )}
                       </div>
                     )}
 
-                    {/* ワースト足切りお休み発表 */}
                     {gameState.status === 'reveal_worst' && (
-                      <div className="bg-slate-900 border-2 border-slate-800 rounded-2xl p-6 text-center space-y-6 shadow-xl">
-                        <h3 className="text-xl font-bold">正答者ワースト発表中...</h3>
-                        {isEliminated ? (
-                          <div className="bg-rose-950/40 border border-rose-500/30 p-6 rounded-2xl animate-pulse space-y-3">
-                            <AlertTriangle className="w-12 h-12 text-rose-500 mx-auto" />
-                            <h4 className="text-2xl font-black text-rose-500">次回、回答お休み（ロック）</h4>
-                            <p className="text-sm text-rose-300">おしい！クイズには正解しましたが、回答が一番遅かったため次回1問のみお休みになります！</p>
-                          </div>
-                        ) : (
-                          <div className="bg-emerald-500/10 border border-emerald-500/30 p-6 rounded-2xl space-y-2">
-                            <CheckCircle className="w-5 h-5 text-emerald-400 mx-auto" />
-                            <h4 className="text-xl font-black text-emerald-400">サバイバル生存！</h4>
-                            <p className="text-sm text-slate-300">クイズに正解し、かつワーストも回避しました！<br />スコアに <b>10 pt</b> が加算されました！</p>
-                          </div>
-                        )}
+                      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-center space-y-3 animate-fade-in">
+                        <h4 className="text-xs font-bold text-slate-400">早押しタイム発表</h4>
+                        <div className="bg-slate-950 p-4 rounded-xl space-y-1 border border-slate-800">
+                          {isCorrectLocal ? (
+                            <div>
+                              <h4 className="text-base font-black text-emerald-400">ポイント獲得！</h4>
+                              <p className="text-[11px] text-slate-300">正解順位の早押しタイムに応じたポイントが加算されました！</p>
+                            </div>
+                          ) : (
+                            <div>
+                              <h4 className="text-base font-black text-slate-500">ポイント加算なし (0pt)</h4>
+                              <p className="text-[11px] text-slate-400">クイズ不正解、またはタイムアップ未回答でした。</p>
+                            </div>
+                          )}
+                          <p className="text-[10px] text-slate-500 mt-2">※お休みシステムは廃止されたため、全員次の問題も続けて回答できます！</p>
+                        </div>
                       </div>
                     )}
 
-                    {/* 終了 */}
                     {gameState.status === 'finished' && (
-                      <div className="bg-slate-900 border-2 border-slate-800 rounded-2xl p-8 text-center space-y-4 shadow-xl">
-                        <Award className="w-16 h-16 text-yellow-400 mx-auto animate-bounce" />
-                        <h3 className="text-2xl font-black">全ての戦いが終了しました！</h3>
-                        <p className="text-sm text-slate-400">総合サバイバル成績は大画面でチェック！</p>
+                      <div className="bg-slate-900 border-2 border-slate-800 rounded-2xl p-6 text-center space-y-3">
+                        <h3 className="text-lg font-black text-yellow-400 animate-bounce">クイズ全問終了！</h3>
+                        <p className="text-xs text-slate-400">最終順位発表を開始します！</p>
                       </div>
                     )}
 
                   </div>
-                )}
 
+                  <footer className="text-center text-[9px] text-slate-600 py-1 border-t border-slate-900 shrink-0">
+                    © 2026 クイズサバイバル
+                  </footer>
+                </div>
+              )}
+
+            </div>
+          </div>
+        );
+      }
+
+      // 3. 主催者ホスト（role === 'host'）のとき。スクロール一切不要の複製大画面UI
+      return (
+        <div className="h-screen max-h-screen bg-slate-950 text-white flex flex-row p-0 overflow-hidden box-border">
+          
+          {/* ==========================================
+              左隅常駐：幅を完全に半分（w-20：80px）に極細化した超スマート操作バー！
+              文字を極小・省略表記にし、メイン選択肢への被りを100%物理的にポチポチ撲滅！
+             ========================================== */}
+          <div className="w-[80px] shrink-0 bg-slate-900/95 border-r border-slate-800 flex flex-col justify-between items-center py-4 z-50 h-full">
+            <div className="flex flex-col items-center space-y-4 w-full px-1">
+              <span className="text-[8px] font-black text-amber-500 tracking-wider text-center uppercase leading-tight">REMOTE</span>
+              
+              <div className="flex flex-col gap-2 w-full">
+                <button 
+                  onClick={startQuestion} 
+                  disabled={gameState.status === 'reading_answering' || gameState.status === 'reveal_poll' || gameState.status === 'reveal_answer'} 
+                  className="w-full py-2 bg-blue-600 hover:bg-blue-500 rounded font-black text-[10px] disabled:opacity-20 text-center transition-all shadow"
+                >
+                  出題
+                </button>
+                <button 
+                  onClick={stopAnsweringAndShowPoll} 
+                  disabled={gameState.status !== 'reading_answering'} 
+                  className="w-full py-2 bg-amber-500 text-slate-950 rounded font-black disabled:opacity-20 text-center text-[10px] transition-all shadow"
+                >
+                  締切
+                </button>
+                <button 
+                  onClick={revealAnswer} 
+                  disabled={gameState.status !== 'reveal_poll'} 
+                  className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 rounded font-black disabled:opacity-20 text-center text-[10px] transition-all shadow"
+                >
+                  正解
+                </button>
+                <button 
+                  onClick={revealWorstAndDistributePoints} 
+                  disabled={gameState.status !== 'reveal_answer'} 
+                  className="w-full py-2 bg-rose-600 hover:bg-rose-500 rounded font-black disabled:opacity-20 text-center text-[10px] transition-all shadow"
+                >
+                  集計
+                </button>
               </div>
-              <footer className="text-center text-[10px] text-slate-600 py-4">
-                © 2026 クイズサバイバル
-              </footer>
+
+              <div className="pt-2 border-t border-slate-800 w-full space-y-1.5 text-center">
+                <span className="text-[8px] text-slate-500 font-bold block">TEST</span>
+                <button onClick={addMockPlayers} className="w-full py-1 bg-slate-800 hover:bg-slate-700 rounded text-[9px] font-bold">AI追加</button>
+                <button onClick={simulateMockAnswering} disabled={gameState.status !== 'reading_answering'} className="w-full py-1 bg-slate-800 hover:bg-slate-700 rounded disabled:opacity-20 text-[9px] font-bold">AI回答</button>
+                <button onClick={clearMockPlayers} className="w-full py-1 bg-rose-950/20 text-rose-400 rounded text-[9px] font-bold">AI削除</button>
+              </div>
+
+              <div className="pt-2 border-t border-slate-800 w-full flex flex-col gap-1 text-[8px]">
+                <button onClick={openQuestionEditor} className="w-full py-1 bg-slate-800 rounded font-bold">編集</button>
+                <button onClick={resetGame} className="w-full py-1 bg-rose-950/20 text-rose-400 rounded font-bold">リセット</button>
+              </div>
+            </div>
+
+            <div className="flex flex-col items-center gap-2 pt-2 border-t border-slate-800 w-full">
+              <button onClick={() => setIsMuted(!isMuted)} className="w-7 h-7 rounded bg-slate-800 hover:bg-slate-700 text-xs flex items-center justify-center">
+                {isMuted ? "🔇" : "🔊"}
+              </button>
+              <span className="text-[8px] text-slate-600">v3.0</span>
+            </div>
+          </div>
+
+          {/* クイズメインモニターエリア：左極細リモコンと物理並立分割により、一切被らず全画面表示可能！ */}
+          <div className="flex-grow flex flex-col justify-between p-4 pl-6 pr-4 max-h-screen overflow-hidden box-border">
+            
+            {/* 上部ヘッダーボード */}
+            <div className="bg-slate-900/90 border-b-2 border-amber-500/30 p-3 rounded-xl flex justify-between items-center shadow-lg shrink-0">
+              <div className="flex items-center space-x-3">
+                <div className="bg-blue-600 p-1.5 rounded-lg border border-yellow-300 animate-pulse"><Zap className="w-5 h-5 text-yellow-300" /></div>
+                <h1 className="text-lg md:text-xl font-black bg-gradient-to-r from-yellow-300 to-rose-400 bg-clip-text text-transparent">オールスター感謝祭風 クイズバトル</h1>
+              </div>
+              <div className="text-right flex items-center space-x-4 font-mono text-sm">
+                <span className="text-slate-400">問題: <b className="text-white text-base">{gameState.currentQIndex + 1} / {questions.length}</b></span>
+                <span className="text-slate-400">回答数: <b className="text-white text-base">{answers.length}人</b></span>
+              </div>
+            </div>
+
+            {/* 15秒タイマーゲージ */}
+            {gameState.status === 'reading_answering' && (
+              <div className="bg-slate-900/40 p-2 rounded-xl border border-slate-800 shrink-0 animate-fade-in">
+                <div className="flex justify-between items-center mb-1 font-mono text-xs text-slate-400">
+                  <span>THINKING TIME (15.00s)</span>
+                  <span className="text-3xl font-black text-yellow-400 lcd-number bg-black/80 px-3 py-0.5 rounded border border-yellow-500/20">{timeLeft.toFixed(2)}</span>
+                </div>
+                <div className="w-full bg-slate-950 h-5 rounded-full overflow-hidden border-2 border-slate-800 p-0.5">
+                  <div className={`h-full rounded-full transition-all duration-75 ${getTimerColorClass()}`} style={{ width: `${timerPercentage}%` }} />
+                </div>
+              </div>
+            )}
+
+            {/* メイン演出・スクリーンボード (解答発表中以外はクイズテキスト。発表中は大迫力の縦配置発表) */}
+            <div className="flex-grow bg-slate-900/70 border-2 border-slate-800 rounded-2xl p-4 flex flex-col justify-center items-center relative overflow-hidden shadow-inner min-h-[220px] my-3">
+              
+              {/* READY GO! ポップアップ */}
+              {gameState.status === 'reading_answering' && timeLeft > 13.5 && (
+                <div className="absolute inset-0 bg-slate-950/95 flex items-center justify-center z-40">
+                  <div className="bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-slate-950 font-black text-4xl md:text-6xl py-4 px-10 rounded-xl shadow-2xl border-4 border-white tracking-widest anonymity animate-banner">READY GO!</div>
+                </div>
+              )}
+
+              {/* 通常時：問題文の巨大表示 (正解発表および最遅ワースト発表フェーズ以外でのみ表示) */}
+              {gameState.status !== 'reveal_worst' && gameState.status !== 'reveal_answer' && (
+                <div className="text-center w-full max-w-4xl px-2 animate-fade-in">
+                  <h2 className="text-xl md:text-3.5xl lg:text-4.5xl font-black text-yellow-100 leading-relaxed tracking-wide drop-shadow-md">
+                    {currentQuestion ? currentQuestion.text : "問題が読み込まれるのを待っています..."}
+                  </h2>
+                </div>
+              )}
+
+              {/* 【新設】STEP 3：正解発表フェーズ（5択選択肢パネルを完全非表示にし、スクリーン中央に特大で点滅発表） */}
+              {gameState.status === 'reveal_answer' && currentQuestion && (
+                <div className="w-full max-w-3xl flex flex-col justify-center items-center space-y-6 text-center animate-fade-in">
+                  <span className="text-xs text-emerald-400 font-extrabold tracking-widest block uppercase">ANSWER CHECK (正解発表)</span>
+                  <div className="space-y-4">
+                    <p className="text-slate-400 text-sm font-bold">正解の番号は...</p>
+                    <div className={`text-4xl md:text-7xl font-black text-emerald-400 py-6 px-10 border-4 border-emerald-500 rounded-3xl bg-emerald-500/10 inline-block max-w-full truncate shadow-2xl ${
+                      isFlashingActive ? 'animate-flash' : 'border-dashed'
+                    }`}>
+                      {currentQuestion.answer + 1}. {currentQuestion.options[currentQuestion.answer]}
+                    </div>
+                  </div>
+                  <p className="text-xs text-slate-400">早押しタイムによる配点集計発表（STEP 4）に移ります。</p>
+                </div>
+              )}
+
+              {/* STEP 4：配点結果 ➔ 最速＆最遅発表（選択肢を完全に消して大迫力の縦並びで大表示！） */}
+              {gameState.status === 'reveal_worst' && (
+                <div className="w-full max-w-3xl flex flex-col justify-center items-center space-y-4 animate-fade-in">
+                  
+                  {revealStage === 'showing_losers' && (
+                    <div className="space-y-4 w-full">
+                      <h3 className="text-base text-rose-400 font-extrabold uppercase flex items-center justify-center gap-1.5 animate-pulse">
+                        早押しタイム集計発表中...
+                      </h3>
+                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 justify-center">
+                        {visibleLosers.map((p, i) => (
+                          <div key={p.id} className="bg-slate-900/95 border-2 border-slate-800 p-3 rounded-2xl flex flex-col items-center justify-center animate-fade-in shadow-md">
+                            <span className="text-[10px] text-slate-400 font-bold mb-1">正解順位 下位 {11 - i}位</span>
+                            {/* ネームプレート・名前を特大サイズ化 */}
+                            <span className="text-xl md:text-2xl font-black text-white truncate w-full text-center">{p.name || ''}</span>
+                            <span className="text-xs text-slate-400 font-mono mt-1 font-bold">{((p.time || 0) / 1000).toFixed(2)}秒</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {revealStage === 'waiting_worst' && (
+                    <div className="space-y-2 text-center">
+                      <h4 className="text-lg font-bold text-indigo-400 tracking-wider uppercase">早押し最遅決定まで...</h4>
+                      <div className="text-8xl font-black text-indigo-500 font-mono animate-pulse drop-shadow-[0_0_20px_rgba(99,102,241,0.6)]">{countdownNum}</div>
+                    </div>
+                  )}
+
+                  {/* 最速チャンピオン（上段・中サイズ）と、最遅ワースト（下段・看板級の超絶巨大表示！）の配置 */}
+                  {revealStage === 'showing_worst' && (
+                    <div className="flex flex-col space-y-6 items-center w-full">
+                      
+                      {/* ① 最速解答者の発表 (上部・以前のままでよい) */}
+                      {fastestPlayer && (
+                        <div className="bg-gradient-to-br from-yellow-500/10 via-yellow-500/15 to-yellow-500/10 border border-yellow-500/30 p-4 rounded-xl text-center shadow-lg w-full max-w-lg">
+                          <span className="text-xs text-yellow-300 font-black tracking-widest block uppercase font-bold">FASTEST CHAMPION (最速解答者 15pt)</span>
+                          <h4 className="text-xl md:text-2xl font-black text-yellow-200 mt-1 truncate">{fastestPlayer.name} さん</h4>
+                          <p className="text-xs text-slate-300 font-mono mt-0.5">早押しタイム: <b className="text-white font-bold">{((fastestPlayer.time || 0)/1000).toFixed(3)}</b> 秒</p>
+                        </div>
+                      )}
+
+                      {/* ② ワースト最遅プレイヤー（下部・プロジェクター用の大看板級の超巨大文字！） */}
+                      {worstPlayer && (
+                        <div className="bg-slate-950 border-4 border-indigo-500 p-6 rounded-3xl text-center shadow-[0_0_35px_rgba(99,102,241,0.5)] w-full max-w-xl animate-fade-in">
+                          <span className="text-sm text-indigo-400 font-black tracking-widest block uppercase font-bold">TOUCH OF THE DELAY (最遅正解者 1pt)</span>
+                          <h4 className={`text-4xl md:text-7xl font-black text-indigo-300 mt-2 truncate ${isFlashingActive ? 'animate-flash' : ''}`}>
+                            {worstPlayer.name} さん
+                          </h4>
+                          <p className="text-sm text-slate-400 mt-2 font-bold">早押しタイム: <b className="text-white text-lg font-mono">{((worstPlayer.time || 0)/1000).toFixed(3)}</b> 秒</p>
+                        </div>
+                      )}
+
+                    </div>
+                  )}
+
+                  {revealStage === 'idle' && !worstPlayer && (
+                    <div className="text-center py-8 space-y-3">
+                      <h4 className="text-2xl font-black text-rose-400">全員不正解！ (0pt)</h4>
+                      <p className="text-sm text-slate-400">正解したプレイヤーがいませんでした。次の問題へ進みましょう！</p>
+                    </div>
+                  )}
+
+                </div>
+              )}
+
+            </div>
+
+            {/* 5選択肢パネル（正解発表・ワースト発表フェーズ時は「表示を完全に消去」して中央 of 発表スペースを最大化！） */}
+            {gameState.status !== 'reveal_worst' && gameState.status !== 'reveal_answer' ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 max-w-4xl mx-auto w-full shrink-0 animate-fade-in">
+                {currentQuestion?.options.map((opt, oIdx) => {
+                  const isCorrect = oIdx === currentQuestion.answer;
+                  const isPollState = gameState.status === 'reveal_poll';
+                  const isAnswerState = gameState.status === 'reveal_answer';
+                  const choiceCount = answers.filter(a => a && a.selectedOption === oIdx).length;
+                  const percentage = Math.round((choiceCount / (answers.length || 1)) * 100);
+
+                  const colorClasses = [
+                    'border-blue-500/30 bg-blue-950/20 text-blue-200', 'border-rose-500/30 bg-rose-950/20 text-rose-200',
+                    'border-emerald-500/30 bg-emerald-950/20 text-emerald-200', 'border-yellow-500/30 bg-yellow-950/20 text-yellow-200',
+                    'border-purple-500/30 bg-purple-950/20 text-purple-200'
+                  ];
+
+                  // 2秒間点滅 ➔ 通常点灯（固定）ロジック
+                  const isFlashingNow = isAnswerState && isCorrect && isFlashingActive;
+                  const isStaticHighlightNow = isAnswerState && isCorrect && !isFlashingActive;
+
+                  const highlightClass = isFlashingNow
+                    ? 'border-emerald-500 bg-emerald-950/60 text-emerald-100 ring-4 ring-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.6)] animate-flash'
+                    : isStaticHighlightNow
+                    ? 'border-emerald-500 bg-emerald-950/5 text-emerald-100 ring-2 ring-emerald-500/60 border-dashed shadow-[0_0_25px_rgba(16,185,129,0.5)]'
+                    : colorClasses[oIdx];
+
+                  return (
+                    <div key={oIdx} className={`p-3.5 rounded-xl border-2 relative overflow-hidden transition-all duration-300 ${highlightClass}`}>
+                      {(isPollState || isAnswerState) && (
+                        <div className={`absolute left-0 top-0 bottom-0 opacity-20 transition-all duration-1000 ${isAnswerState && isCorrect ? 'bg-emerald-500' : 'bg-blue-500'}`} style={{ width: `${percentage}%` }} />
+                      )}
+                      <div className="relative z-10 flex justify-between items-center text-sm md:text-base">
+                        <span className="font-bold flex items-center space-x-3">
+                          <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black border ${isAnswerState && isCorrect ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900'}`}>{oIdx + 1}</span>
+                          <span>{opt}</span>
+                        </span>
+                        {(isPollState || isAnswerState) && (
+                          <div className="flex items-center space-x-3 font-mono text-xs md:text-sm shrink-0">
+                            <span className="text-slate-400 font-bold">{choiceCount}人</span>
+                            <span className={`font-black ${isAnswerState && isCorrect ? 'text-emerald-400' : 'text-blue-400'}`}>{percentage}%</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : null}
+
+          </div>
+
+          {/* クイズ問題編集ボード */}
+          {isEditingQuestions && (
+            <div className="fixed inset-4 bg-slate-900/95 border-2 border-slate-800 rounded-2xl p-4 shadow-2xl flex flex-col justify-between z-50 animate-fade-in text-xs">
+              <div className="flex justify-between items-center border-b border-slate-800 pb-2">
+                <h3 className="text-sm font-black text-indigo-400 flex items-center gap-1.5"><EditIcon className="w-4 h-4" /> 問題カスタマイズ作成・編集ボード</h3>
+                <button onClick={() => setIsEditingQuestions(false)} className="text-slate-400 hover:text-white font-bold">✕ 閉じる</button>
+              </div>
+              <div className="grid grid-cols-4 gap-4 flex-grow my-3 overflow-hidden">
+                <div className="col-span-1 border-r border-slate-800 pr-1 space-y-1 overflow-y-auto h-full no-scrollbar">
+                  {questions.map((q, idx) => (
+                    <button key={idx} onClick={() => { saveSelectedEdit(); loadQuestionToEdit(idx); }} className={`w-full text-left px-2 py-1.5 rounded text-[11px] font-bold transition-all truncate block ${selectedEditIndex === idx ? 'bg-indigo-600 text-white' : 'bg-slate-800/40'}`}>
+                      {idx + 1}. {q.text || "(未入力)"}
+                    </button>
+                  ))}
+                </div>
+                <div className="col-span-3 space-y-3 overflow-y-auto h-full pr-1">
+                  <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
+                    <span className="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded font-bold">第 {selectedEditIndex + 1} 問</span>
+                    <textarea value={editQuestionText} onChange={(e) => setEditQuestionText(e.target.value)} rows={2} className="w-full bg-slate-900 border border-slate-800 rounded p-2 text-xs text-white focus:outline-none" />
+                    <div className="space-y-1.5">
+                      {editOptions.map((opt, oIdx) => (
+                        <div key={oIdx} className="flex items-center space-x-2">
+                          <input type="text" value={opt} onChange={(e) => { const next = [...editOptions]; next[oIdx] = e.target.value; setEditOptions(next); }} className="flex-grow bg-slate-900 border border-slate-800 rounded p-1.5 text-xs text-white" />
+                          <input type="radio" name="editRadio" checked={editAnswerIndex === oIdx} onChange={() => setEditAnswerIndex(oIdx)} className="w-4 h-4 text-indigo-600" />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex justify-end"><button onClick={saveAllQuestionsToCloud} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-black shadow-md">クラウド変更保存＆全同期</button></div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* 下部：スクロール可能な横並び参加者ボード */}
+          <div className="bg-slate-900/60 border-t border-slate-800/60 p-1.5 rounded-xl flex items-center space-x-2 overflow-x-auto no-scrollbar max-h-[45px] box-border shrink-0 fixed bottom-2 right-4 left-24">
+            <div className="flex items-center space-x-1.5 shrink-0 text-slate-500 text-[10px] font-black uppercase tracking-wider border-r border-slate-800 pr-2">
+              <Users className="w-3.5 h-3.5 text-blue-400" /> <span>BOARD ({players.length})</span>
+            </div>
+            <div className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar">
+              {players.map((p, idx) => {
+                if (!p?.id) return null;
+                const ansObj = answers.find(a => a?.playerId === p.id);
+                const answered = !!ansObj;
+
+                return (
+                  <div key={p.id} className={`px-2.5 py-0.5 rounded text-[11px] font-bold shrink-0 border transition-all flex items-center space-x-1 ${
+                    answered && gameState.status === 'reading_answering' ? 'bg-blue-500/20 border-blue-400 text-blue-300' : 'bg-slate-800/50 border-transparent text-slate-300'
+                  }`}>
+                    <span>{idx+1}. {p.name}</span>
+                    <span className="text-amber-400 font-mono text-[10px]">({p.score || 0})</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* ロビー画面 (参加者0人の時、デバッグ用AIプレイヤー30人追加ショートカットボタンを表示) */}
+          {gameState.status === 'lobby' && !isEditingQuestions && (
+            <div className="fixed inset-y-4 top-20 bottom-16 bg-slate-900 border-2 border-slate-800 rounded-3xl p-6 md:p-12 text-center flex flex-col justify-center items-center shadow-2xl z-20 animate-fade-in left-24 right-4">
+              <div className="animate-pulse bg-blue-500/10 p-4 rounded-full border border-blue-500/20 mb-4">
+                <Users className="w-12 h-12 text-blue-400" />
+              </div>
+              <div className="space-y-2 mb-6">
+                <h3 className="text-2xl font-black">参加者エントリー待機中...</h3>
+                <p className="text-slate-400 text-sm max-w-md">
+                  現在、学生たちのスマートフォンからのアクセスを待っています。左下のURLを配布してニックネームを設定してもらってください。
+                </p>
+              </div>
+              
+              <div className="flex flex-col sm:flex-row gap-3 w-full max-w-md">
+                <button 
+                  onClick={startQuestion} 
+                  disabled={players.length === 0} 
+                  className="flex-1 px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 disabled:opacity-40 disabled:cursor-not-allowed text-white text-base font-black rounded-2xl shadow-lg transition-all"
+                >
+                  ゲームを開始する (第1問へ)
+                </button>
+                
+                {players.length === 0 && (
+                  <button 
+                    onClick={addMockPlayers} 
+                    className="flex-1 px-6 py-4 bg-amber-500 hover:bg-amber-600 text-slate-950 text-base font-black rounded-2xl shadow-lg transition-all animate-bounce"
+                  >
+                    💡 【テスト用】AI 30人追加して開始
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* ==========================================
+              【華麗なる最終順位発表全画面ステージ】（30位からせり上がりカウントアップ順位発表！）
+             ========================================== */}
+          {gameState.status === 'finished' && (
+            <div className="fixed inset-y-4 top-20 bottom-16 bg-slate-900 border-4 border-amber-500/50 rounded-3xl p-6 text-center flex flex-col justify-between items-center shadow-2xl z-40 animate-fade-in left-24 right-4 overflow-hidden">
+              
+              {!revealRankingActive ? (
+                <div className="my-auto space-y-6 animate-fade-in">
+                  <div className="text-6xl text-amber-400">👑</div>
+                  <h3 className="text-3xl font-black tracking-widest bg-gradient-to-r from-yellow-300 via-amber-400 to-yellow-300 bg-clip-text text-transparent">
+                    最終順位発表ステージ
+                  </h3>
+                  <p className="text-sm text-slate-400 max-w-md mx-auto">
+                    ポイント集計が完了しました！大画面プロジェクターで下位（最大30位）から順に、ドラムロール演出とともに発表していきます。
+                  </p>
+                  <button 
+                    onClick={startRankReveal}
+                    className="px-10 py-4 bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-950 font-black text-lg rounded-2xl shadow-lg hover:scale-105 active:scale-95 transition-all"
+                  >
+                    順位発表スタート！
+                  </button>
+                </div>
+              ) : (
+                <div className="w-full h-full flex flex-col justify-between p-2 space-y-4">
+                  <div>
+                    <h3 className="text-lg font-black text-amber-400 tracking-wider">ALLSTAR CHAMPIONSHIP RANKING</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">下位（最大30名）から順番に1名ずつ発表されます</p>
+                  </div>
+
+                  {/* 30位から順次せり上がってくるネオンランキングボード */}
+                  <div className="flex-grow grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 overflow-y-auto no-scrollbar max-h-[55vh] py-2 border-y border-slate-800">
+                    {/* 降順（1位から順）だが、revealRankIndex 以上のインデックスのみ表示する（＝下位から出現） */}
+                    {[...players]
+                      .sort((a, b) => (b.score || 0) - (a.score || 0))
+                      .slice(0, 30)
+                      .map((p, idx, arr) => {
+                        // revealRankIndexより数値が大きい（下位）の場合のみ表示
+                        const isRevealed = revealRankIndex === -1 || idx > revealRankIndex;
+                        const rankNum = idx + 1;
+
+                        if (!isRevealed) return null;
+
+                    
+                        return (
+                          <div 
+                            key={p.id} 
+                            className={`p-3 rounded-xl border flex justify-between items-center animate-fade-in transition-all ${
+                              rankNum === 1 
+                                ? 'bg-gradient-to-r from-yellow-500/20 via-amber-400/30 to-yellow-500/20 border-yellow-400 shadow-[0_0_20px_rgba(234,179,8,0.5)] ring-2 ring-yellow-400' 
+                                : rankNum === 2
+                                ? 'bg-slate-800/80 border-slate-400'
+                                : rankNum === 3
+                                ? 'bg-slate-900/90 border-amber-700/50'
+                                : 'bg-slate-950/90 border-slate-800'
+                            }`}
+                          >
+                            <span className="font-black text-sm">
+                              {rankNum === 1 ? '🥇 優勝' : rankNum === 2 ? '🥈 2位' : rankNum === 3 ? '🥉 3位' : `${rankNum}位`}
+                            </span>
+                            <span className="font-extrabold truncate max-w-[120px] text-base">{p.name}</span>
+                            <span className="text-amber-400 font-mono text-sm font-black">{p.score || 0}pt</span>
+                          </div>
+                        );
+                      })}
+                  </div>
+
+                  {/* コントロール・ボタンエリア */}
+                  <div className="flex justify-center items-center gap-4 py-2 shrink-0">
+                    {revealRankIndex >= 0 ? (
+                      <button 
+                        onClick={revealNextRank}
+                        className="px-8 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-black tracking-wider shadow-lg animate-bounce"
+                      >
+                        次の順位を発表 (残り {revealRankIndex + 1}名)
+                      </button>
+                    ) : (
+                      <div className="space-y-3">
+                        <p className="text-sm font-black text-emerald-400 animate-pulse">👑 最終順位発表完了！おめでとうございます！ 👑</p>
+                        <button 
+                          onClick={resetGame}
+                          className="px-8 py-3.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-sm font-black tracking-wider shadow-lg"
+                        >
+                          ロビーに戻って最初から再戦する
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
             </div>
           )}
 
