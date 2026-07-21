@@ -156,26 +156,25 @@
     );
 
     const DEFAULT_QUESTIONS = [
-      { id: 1, text: "太陽系で最も大きい惑星はどれ？", options: ["地球", "火星", "木星", "土星", "海王星"], answer: 2 },
-      { id: 2, text: "日本で一番高い山は富士山ですが、二番目に高い山は？", options: ["北岳", "槍ヶ岳", "奥穂高岳", "間ノ岳", "乗鞍岳"], answer: 0 },
-      { id: 3, text: "「光の三原色」に含まれない色はどれ？", options: ["赤", "緑", "青", "黄", "シアン"], answer: 3 },
-      { id: 4, text: "英語で「オクトパス（Octopus）」といえば何？", options: ["イカ", "タコ", "クラゲ", "ヒトデ", "カニ"], answer: 1 },
-      { id: 5, text: "世界で最も面積の広い国はどこ？", options: ["カナダ", "アメリカ", "中国", "ロシア", "ブラジル"], answer: 3 },
-      { id: 6, text: "水（H2O）を電気分解したとき、陰極（マイナス極）から発生する気体は？", options: ["酸素", "水素", "二酸化炭素", "窒素", "塩素"], answer: 1 },
-      { id: 7, text: "ことわざ「犬も歩けば棒に当たる」の次の句（本来の意味）として近いのは？", options: ["災難に遭う", "幸運に出会う", "道に迷う", "怪我をする", "友達ができる"], answer: 0 },
-      { id: 8, text: "トランプのカードはジョーカーを除くと全部で何枚？", options: ["48枚", "50枚", "52枚", "54枚", "56枚"], answer: 2 },
-      { id: 9, text: "元素記号「Au」で表される金属はどれ？", options: ["銀", "銅", "鉄", "金", "白金"], answer: 3 },
-      { id: 10, text: "日本国憲法が公布された日はいつ？", options: ["5月3日", "11月3日", "2月11日", "8月15日", "12月23日"], answer: 1 },
-      { id: 11, text: "世界で最も長い川はどれ？", options: ["アマゾン川", "ナイル川", "長江", "ミシシッピ川", "信濃川"], answer: 1 },
-      { id: 12, text: "日本の都道府県で、最も面積が小さいのはどこ？", options: ["東京都", "大阪府", "香川県", "沖縄県", "鳥取県"], answer: 2 },
-      { id: 13, text: "一般的なサッカーの試合で、1チームのピッチ上の選手数は何人？", options: ["9人", "10人", "11人", "12人", "15人"], answer: 2 },
-      { id: 14, text: "「人間は考える葦である」という言葉を残したフランスの哲学者は？", options: ["デカルト", "パスカル", "ルソー", "サルトル", "モンテーニュ"], answer: 1 },
-      { id: 15, text: "世界一高い自立式電波塔「東京スカイツリー」の高さは何メートル？", options: ["333m", "555m", "634m", "777m", "1000m"], answer: 2 },
-      { id: 16, text: "哺乳類の中で、唯一自力で空を飛ぶことができるのはどれ？", options: ["モモンガ", "ムササビ", "コウモリ", "ペンギン", "ダチョウ"], answer: 2 },
-      { id: 17, text: "ダイヤモンドは何の元素からできている？", options: ["炭素", "水素", "窒素", "酸素", "ケイ素"], answer: 0 },
-      { id: 18, text: "日本の初代内閣総理大臣は誰？", options: ["板垣退助", "伊藤博文", "大隈重信", "西郷隆盛", "山県有朋"], answer: 1 },
-      { id: 19, text: "オリンピックの五輪マークの青、黄、黒、緑、あと一つの色は？", options: ["紫", "オレンジ", "白", "赤", "ピンク"], answer: 3 },
-      { id: 20, text: "1年は365日ですが、うるう年は何日？", options: ["364日", "365日", "366日", "367日", "368日"], answer: 2 }
+
+  { id: 1, text: "骨髄において未熟B細胞が自己成分に強く反応するレセプターを発現した際、アポトーシスを回避するために行われる遺伝子再構成のやり直しを何と呼ぶか。", options: ["クローン増殖", "負の選択", "レセプター編集", "クラススイッチ", "アネルギー"], answer: 2 },
+  { id: 2, text: "B細胞の活性化において、自然免疫の産物である補体 C3d を認識し、BCRからのシグナルを強力に増強するレセプターはどれか。", options: ["CD40", "CR1（CD35）", "Fc レセプター", "CR2（CD21）", "Toll 様レセプター"], answer: 1 },
+  { id: 3, text: "補体系の活性化経路のうち、免疫複合体（抗原＋抗体）によって開始される「古典経路」のトリガーとして最も強力な抗体クラスはどれか。", options: ["IgA", "IgE", "IgM", "IgG4", "IgD"], answer: 2 },
+  { id: 4, text: "補体系の活性化において、マグネシウムイオン（Mg2+）を必須とする反応段階はどれか。", options: ["膜傷害複合体（MAC）における C9 の重合", "レクチン経路における MBL と糖鎖の結合", "別経路における C3b と B因子 の結合", "免疫粘着現象における赤血球の捕捉", "古典経路における C1q と抗体の結合"], answer: 2 },
+  { id: 5, text: "補体活性化の最終産物である膜傷害複合体（MAC）が最も有効に機能し、菌体を直接破壊（溶菌）を期待できる標的はどれか。", options: ["肺炎レンサ球菌（グラム陽性菌）", "ウイルス粒子（エンベロープなし）", "黄色ブドウ球菌（グラム陽性菌）", "真菌（カビ・酵母）", "髄膜炎菌（グラム陰性菌）"], answer: 4 },
+  { id: 6, text: "ナイーブT細胞が抗原提示細胞から「主刺激」を受けた際、同時に「副刺激」を受け取れなかった場合に陥る不可逆的な不応答状態を何というか。", options: ["分化誘導", "アポトーシス", "ネクローシス", "アネルギー", "クラススイッチ"], answer: 3 },
+  { id: 7, text: "細胞傷害性T細胞（Tc細胞）やNK細胞が標的細胞にアポトーシスを誘導する際、細胞膜に管状の穴を開ける蛋白質はどれか。", options: ["Fas リガンド", "デフェンシン", "リゾチーム", "グランザイム", "パーフォリン"], answer: 4 },
+  { id: 8, text: "Th1細胞が産生し、マクロファージを「M1型」へ活性化させて殺菌能を飛躍的に高める中心的なサイトカインはどれか。", options: ["IL−17", "TNF−α", "IL−10", "IL−4", "IFN−γ（インターフェロン・ガンマ）"], answer: 4 },
+  { id: 9, text: "抗原提示細胞から IL−12 の刺激を受けたナイーブT細胞が分化し、細胞性免疫を指揮するようになるサブセットはどれか。", options: ["制御性T細胞（Treg）", "Th1細胞", "形質細胞", "Th2細胞", "Th17細胞"], answer: 1 },
+  { id: 10, text: "サイトカインの作用機構のうち、産生された物質が血流に乗って遠隔の臓器や細胞に作用する形式を何というか。", options: ["オートクライン（自己分泌）", "ジャクスタクライン（遠隔分泌）", "エクソクライン（外分泌）", "パラクライン（傍分泌）", "エンドクライン（内分泌）"], answer: 4 },
+  { id: 11, text: "肝臓において、IL−6 等の刺激により合成が著しく亢進し、病原体に結合してオプソニンとして働く蛋白質はどれか。", options: ["アルブミン", "ヘモグロビン", "IgM", "トランスフェリン", "C 反応性蛋白（CRP）"], answer: 4 },
+  { id: 12, text: "不完全抗原（ハプテン）が免疫原性を獲得するために必要な条件はどれか。", options: ["ウイルスのエンベロープ脂質を付加すること。", "56℃で30分間加熱し、非働化すること。", "赤血球表面の CR1 レセプターに吸着させること。", "強酸または強アルカリで処理し、変性させること。", "分子量の大きい「キャリア（担体）」と結合すること。"], answer: 4 },
+  { id: 13, text: "毒蛇の咬傷や破傷風の毒素に対し、他者や動物で作られた抗体を投与して即効性のある防御を得る方法を何というか。", options: ["受動免疫", "細胞性免疫", "能動免疫", "アジュバント効果", "自然免疫"], answer: 0 },
+  { id: 14, text: "補体系の「レクチン経路」において、非自己（細菌等）の認識の目印となる糖鎖はどれか。", options: ["グリコーゲン", "ヒアルロン酸", "マンノース", "シアル酸", "ガラクトース"], answer: 2 },
+  { id: 15, text: "成熟ナイーブB細胞の細胞表面に共発現している免疫グロブリンの組み合わせはどれか。", options: ["膜型 IgM と膜型 IgG", "膜型 IgM と膜型 IgD", "分泌型 IgA と膜型 IgM", "膜型 IgD と膜型 IgE", "膜型 IgA と膜型 IgG"], answer: 1 },
+  { id: 16, text: "補体成分C3の活性化を阻害、あるいは分解を促進する調節因子(インヒビター)はどれか。", options: ["C1q", "B 因子", "プロパージン", "D 因子", "H 因子"], answer: 4 },
+  { id: 17, text: "補体系の活性化において、Ca2+(カルシウムイオン)が必須となるステップはどれか。", options: ["レクチン経路におけるC3の分解", "C1複合体(C1q,C1r,C1s)の安定化と形成", "副経路におけるB因子の結合", "膜傷害複合体(MAC)の細胞膜への挿入", "C3転換酵素によるC3の分解"], answer: 1 }
+
     ];
 
     function App() {
@@ -398,6 +397,20 @@
         return () => clearInterval(interval);
       }, [gameState.status, gameState.questionStartTime, role]);
 
+      // 演出ステージをデータベースおよび全端末に同期送信するヘルパー関数
+      const syncRevealStage = async (stage) => {
+        setRevealStage(stage);
+        if (isOnlineMode) {
+          try {
+            await db.doc(`artifacts/${appId}/public/data/game_state/current`).update({ revealStage: stage });
+          } catch (e) {
+            console.error("revealStage sync error:", e);
+          }
+        } else {
+          setGameState(prev => ({ ...prev, revealStage: stage }));
+        }
+      };
+
       // 点滅タイマー
       useEffect(() => {
         if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
@@ -485,7 +498,7 @@
       };
 
       const triggerWorstAnimationSequence = (losersToShow, worst) => {
-        setRevealStage('showing_losers');
+        syncRevealStage('showing_losers');
         setVisibleLosers([]);
         playSound('drumroll');
 
@@ -498,7 +511,7 @@
             index++;
           } else {
             clearInterval(interval);
-            setRevealStage('waiting_worst');
+            syncRevealStage('waiting_worst');
             setCountdownNum(3);
             
             let count = 3;
@@ -508,7 +521,7 @@
               playSound('countdown');
               if (count === 0) {
                 clearInterval(countdownInterval);
-                setRevealStage('showing_worst');
+                syncRevealStage('showing_worst');
                 playSound('gong');
               }
             }, 1000);
@@ -611,7 +624,7 @@
 
         if (isOnlineMode) {
           const batch = db.batch();
-          batch.set(db.doc(`artifacts/${appId}/public/data/game_state/current`), { status: 'lobby', currentQIndex: 0, questionStartTime: null });
+          batch.set(db.doc(`artifacts/${appId}/public/data/game_state/current`), { status: 'lobby', currentQIndex: 0, questionStartTime: null, revealStage: 'idle' });
           
           const playersSnap = await db.collection(`artifacts/${appId}/public/data/players`).get();
           playersSnap.forEach((d) => batch.delete(d.ref));
@@ -621,7 +634,7 @@
           
           await batch.commit();
         } else {
-          setGameState({ status: 'lobby', currentQIndex: 0, questionStartTime: null });
+          setGameState({ status: 'lobby', currentQIndex: 0, questionStartTime: null, revealStage: 'idle' });
           setPlayers([
             { id: 'offline-local-user-id', name: 'あなた（ゲスト）', score: 0 },
             { id: 'demo-p1', name: 'たろう', score: 20 },
@@ -686,26 +699,27 @@
           
           const nextIdx = gameState.status === 'lobby' ? 0 : gameState.currentQIndex + 1;
           if (nextIdx >= questions.length) {
-            await db.doc(`artifacts/${appId}/public/data/game_state/current`).update({ status: 'finished' });
+            await db.doc(`artifacts/${appId}/public/data/game_state/current`).update({ status: 'finished', revealStage: 'idle' });
           } else {
             batch.update(db.doc(`artifacts/${appId}/public/data/game_state/current`), {
               status: 'reading_answering',
               currentQIndex: nextIdx,
-              questionStartTime: Date.now()
+              questionStartTime: Date.now(),
+              revealStage: 'idle'
             });
           }
           await batch.commit();
         } else {
           setAnswers([]);
           const nextIdx = gameState.status === 'lobby' ? 0 : gameState.currentQIndex + 1;
-          if (nextIdx >= questions.length) setGameState(prev => ({ ...prev, status: 'finished' }));
-          else setGameState({ status: 'reading_answering', currentQIndex: nextIdx, questionStartTime: Date.now() });
+          if (nextIdx >= questions.length) setGameState(prev => ({ ...prev, status: 'finished', revealStage: 'idle' }));
+          else setGameState({ status: 'reading_answering', currentQIndex: nextIdx, questionStartTime: Date.now(), revealStage: 'idle' });
         }
       };
 
       const stopAnsweringAndShowPoll = async () => {
-        if (isOnlineMode) await db.doc(`artifacts/${appId}/public/data/game_state/current`).update({ status: 'reveal_poll' });
-        else setGameState(prev => ({ ...prev, status: 'reveal_poll' }));
+        if (isOnlineMode) await db.doc(`artifacts/${appId}/public/data/game_state/current`).update({ status: 'reveal_worst', revealStage: 'showing_losers' });
+        else setGameState(prev => ({ ...prev, status: 'reveal_worst', revealStage: 'showing_losers' }));
       };
 
       const revealAnswer = async () => {
@@ -1002,12 +1016,12 @@
                       </div>
                     )}
 
-                    {/* ポイント確定フェーズ（STEP 4: reveal_worst）：大画面での最速・最遅発表完了（showing_worst）後にポイント結果を表示！ */}
+                    {/* ポイント確定フェーズ（STEP 4: reveal_worst）：クラウドから同期される revealStage が 'showing_worst' に達した瞬間にポイント結果を開封 */}
                     {gameState.status === 'reveal_worst' && (
                       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-center space-y-3 animate-fade-in">
                         <h4 className="text-xs font-bold text-slate-400">早押し集計 ＆ ポイント結果</h4>
                         
-                        {revealStage !== 'showing_worst' ? (
+                        {(gameState.revealStage || revealStage) !== 'showing_worst' ? (
                           <div className="bg-slate-950 p-5 rounded-xl space-y-2 border border-slate-800">
                             <div className="animate-spin text-amber-400 inline-block">
                               <RefreshCw className="w-8 h-8" />
@@ -1120,7 +1134,7 @@
             <div className="bg-slate-900/90 border-b-2 border-amber-500/30 p-3 rounded-xl flex justify-between items-center shadow-lg shrink-0">
               <div className="flex items-center space-x-3">
                 <div className="bg-blue-600 p-1.5 rounded-lg border border-yellow-300 animate-pulse"><Zap className="w-5 h-5 text-yellow-300" /></div>
-                <h1 className="text-lg md:text-xl font-black bg-gradient-to-r from-yellow-300 to-rose-400 bg-clip-text text-transparent">臨床検査技術学科　クイズバトル</h1>
+                <h1 className="text-lg md:text-xl font-black bg-gradient-to-r from-yellow-300 to-rose-400 bg-clip-text text-transparent">臨床検査技術学科 クイズバトル</h1>
               </div>
               <div className="text-right flex items-center space-x-4 font-mono text-sm">
                 <span className="text-slate-400">問題: <b className="text-white text-base">{gameState.currentQIndex + 1} / {questions.length}</b></span>
