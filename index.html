@@ -155,27 +155,61 @@
       </svg>
     );
 
+    // ==========================================
+    // 免疫学クイズ設問データ（全17問・修正適用済み）
+    // ==========================================
     const DEFAULT_QUESTIONS = [
-      
-  { id: 1, text: "骨髄において未熟B細胞が自己成分に強く反応するレセプターを発現した際、アポトーシスを回避するために行われる遺伝子再構成のやり直しを何と呼ぶか。", options: ["クローン増殖", "負の選択", "レセプター編集", "クラススイッチ", "アネルギー"], answer: 2 },
-  { id: 2, text: "B細胞の活性化において、自然免疫の産物である補体 C3d を認識し、BCRからのシグナルを強力に増強するレセプターはどれか。", options: ["CD40", "CR1（CD35）", "Fc レセプター", "CR2（CD21）", "Toll 様レセプター"], answer: 1 },
-  { id: 3, text: "補体系の活性化経路のうち、免疫複合体（抗原＋抗体）によって開始される「古典経路」のトリガーとして最も強力な抗体クラスはどれか。", options: ["IgA", "IgE", "IgM", "IgG4", "IgD"], answer: 2 },
-  { id: 4, text: "補体系の活性化において、マグネシウムイオン（Mg2+）を必須とする反応段階はどれか。", options: ["膜傷害複合体（MAC）における C9 の重合", "レクチン経路における MBL と糖鎖の結合", "別経路における C3b と B因子 の結合", "免疫粘着現象における赤血球の捕捉", "古典経路における C1q と抗体の結合"], answer: 2 },
-  { id: 5, text: "補体活性化の最終産物である膜傷害複合体（MAC）が最も有効に機能し、菌体を直接破壊（溶菌）を期待できる標的はどれか。", options: ["肺炎レンサ球菌（グラム陽性菌）", "ウイルス粒子（エンベロープなし）", "黄色ブドウ球菌（グラム陽性菌）", "真菌（カビ・酵母）", "髄膜炎菌（グラム陰性菌）"], answer: 4 },
-  { id: 6, text: "ナイーブT細胞が抗原提示細胞から「主刺激」を受けた際、同時に「副刺激」を受け取れなかった場合に陥る不可逆的な不応答状態を何というか。", options: ["分化誘導", "アポトーシス", "ネクローシス", "アネルギー", "クラススイッチ"], answer: 3 },
-  { id: 7, text: "細胞傷害性T細胞（Tc細胞）やNK細胞が標的細胞にアポトーシスを誘導する際、細胞膜に管状の穴を開ける蛋白質はどれか。", options: ["Fas リガンド", "デフェンシン", "リゾチーム", "グランザイム", "パーフォリン"], answer: 4 },
-  { id: 8, text: "Th1細胞が産生し、マクロファージを「M1型」へ活性化させて殺菌能を飛躍的に高める中心的なサイトカインはどれか。", options: ["IL−17", "TNF−α", "IL−10", "IL−4", "IFN−γ（インターフェロン・ガンマ）"], answer: 4 },
-  { id: 9, text: "抗原提示細胞から IL−12 の刺激を受けたナイーブT細胞が分化し、細胞性免疫を指揮するようになるサブセットはどれか。", options: ["制御性T細胞（Treg）", "Th1細胞", "形質細胞", "Th2細胞", "Th17細胞"], answer: 1 },
-  { id: 10, text: "サイトカインの作用機構のうち、産生された物質が血流に乗って遠隔の臓器や細胞に作用する形式を何というか。", options: ["オートクライン（自己分泌）", "ジャクスタクライン（遠隔分泌）", "エクソクライン（外分泌）", "パラクライン（傍分泌）", "エンドクライン（内分泌）"], answer: 4 },
-  { id: 11, text: "肝臓において、IL−6 等の刺激により合成が著しく亢進し、病原体に結合してオプソニンとして働く蛋白質はどれか。", options: ["アルブミン", "ヘモグロビン", "IgM", "トランスフェリン", "C 反応性蛋白（CRP）"], answer: 4 },
-  { id: 12, text: "不完全抗原（ハプテン）が免疫原性を獲得するために必要な条件はどれか。", options: ["ウイルスのエンベロープ脂質を付加すること。", "56℃で30分間加熱し、非働化すること。", "赤血球表面の CR1 レセプターに吸着させること。", "強酸または強アルカリで処理し、変性させること。", "分子量の大きい「キャリア（担体）」と結合すること。"], answer: 4 },
-  { id: 13, text: "毒蛇の咬傷や破傷風の毒素に対し、他者や動物で作られた抗体を投与して即効性のある防御を得る方法を何というか。", options: ["受動免疫", "細胞性免疫", "能動免疫", "アジュバント効果", "自然免疫"], answer: 0 },
-  { id: 14, text: "補体系の「レクチン経路」において、非自己（細菌等）の認識の目印となる糖鎖はどれか。", options: ["グリコーゲン", "ヒアルロン酸", "マンノース", "シアル酸", "ガラクトース"], answer: 2 },
-  { id: 15, text: "成熟ナイーブB細胞の細胞表面に共発現している免疫グロブリンの組み合わせはどれか。", options: ["膜型 IgM と膜型 IgG", "膜型 IgM と膜型 IgD", "分泌型 IgA と膜型 IgM", "膜型 IgD と膜型 IgE", "膜型 IgA と膜型 IgG"], answer: 1 },
-  { id: 16, text: "補体成分C3の活性化を阻害、あるいは分解を促進する調節因子(インヒビター)はどれか。", options: ["C1q", "B 因子", "プロパージン", "D 因子", "H 因子"], answer: 4 },
-  { id: 17, text: "補体系の活性化において、Ca2+(カルシウムイオン)が必須となるステップはどれか。", options: ["レクチン経路におけるC3の分解", "C1複合体(C1q,C1r,C1s)の安定化と形成", "副経路におけるB因子の結合", "膜傷害複合体(MAC)の細胞膜への挿入", "C3転換酵素によるC3の分解"], answer: 1 }
-
+      { id: 1, text: "骨髄において未熟B細胞が自己成分に強く反応するレセプターを発現した際、アポトーシスを回避するために行われる遺伝子再構成のやり直しを何と呼ぶか。", options: ["クローン増殖", "負の選択", "レセプター編集", "クラススイッチ", "アネルギー"], answer: 2 },
+      { id: 2, text: "B細胞の活性化において、自然免疫の産物である補体 C3d を認識し、BCRからのシグナルを強力に増強するレセプターはどれか。", options: ["CD40", "CR1（CD35）", "Fc レセプター", "CR2（CD21）", "Toll 様レセプター"], answer: 3 }, // 問2正解をインデックス3(CR2)に修正
+      { id: 3, text: "補体系の活性化経路のうち、免疫複合体（抗原＋抗体）によって開始される「古典経路」のトリガーとして最も強力な抗体クラスはどれか。", options: ["IgA", "IgE", "IgM", "IgG4", "IgD"], answer: 2 },
+      { id: 4, text: "補体系の活性化において、マグネシウムイオン（Mg2+）を必須とする反応段階はどれか。", options: ["膜傷害複合体（MAC）における C9 の重合", "レクチン経路における MBL と糖鎖の結合", "別経路における C3b と B因子 の結合", "免疫粘着現象における赤血球の捕捉", "古典経路における C1q と抗体の結合"], answer: 2 },
+      { id: 5, text: "補体活性化の最終産物である膜傷害複合体（MAC）が最も有効に機能し、菌体を直接破壊（溶菌）を期待できる標的はどれか。", options: ["肺炎レンサ球菌（グラム陽性菌）", "ウイルス粒子（エンベロープなし）", "黄色ブドウ球菌（グラム陽性菌）", "真菌（カビ・酵母）", "髄膜炎菌（グラム陰性菌）"], answer: 4 },
+      { id: 6, text: "ナイーブT細胞が抗原提示細胞から「主刺激」を受けた際、同時に「副刺激」を受け取れなかった場合に陥る不可逆的な不応答状態を何というか。", options: ["分化誘導", "アポトーシス", "ネクローシス", "アネルギー", "クラススイッチ"], answer: 3 },
+      { id: 7, text: "細胞傷害性T細胞（Tc細胞）やNK細胞が標的細胞にアポトーシスを誘導する際、細胞膜に管状の穴を開ける蛋白質はどれか。", options: ["Fas リガンド", "デフェンシン", "リゾチーム", "グランザイム", "パーフォリン"], answer: 4 },
+      { id: 8, text: "Th1細胞が産生し、マクロファージを「M1型」へ活性化させて殺菌能を飛躍的に高める中心的なサイトカインはどれか。", options: ["IL−17", "TNF−α", "IL−10", "IL−4", "IFN−γ（インターフェロン・ガンマ）"], answer: 4 },
+      { id: 9, text: "抗原提示細胞から IL−12 の刺激を受けたナイーブT細胞が分化し、細胞性免疫を指揮するようになるサブセットはどれか。", options: ["制御性T細胞（Treg）", "Th1細胞", "形質細胞", "Th2細胞", "Th17細胞"], answer: 1 },
+      { id: 10, text: "サイトカインの作用機構のうち、産生された物質が血流に乗って遠隔の臓器や細胞に作用する形式を何というか。", options: ["オートクライン（自己分泌）", "ジャクスタクライン（遠隔分泌）", "エクソクライン（外分泌）", "パラクライン（傍分泌）", "エンドクライン（内分泌）"], answer: 4 },
+      { id: 11, text: "肝臓において、IL−6 等の刺激により合成が著しく亢進し、病原体に結合してオプソニンとして働く蛋白質はどれか。", options: ["アルブミン", "ヘモグロビン", "IgM", "トランスフェリン", "C 反応性蛋白（CRP）"], answer: 4 },
+      { id: 12, text: "不完全抗原（ハプテン）が免疫原性を獲得するために必要な条件はどれか。", options: ["ウイルスのエンベロープ脂質を付加すること。", "56℃で30分間加熱し、非働化すること。", "赤血球表面の CR1 レセプターに吸着させること。", "強酸または強アルカリで処理し、変性させること。", "分子量の大きい「キャリア（担体）」と結合すること。"], answer: 4 },
+      { id: 13, text: "毒蛇の咬傷や破傷風の毒素に対し、他者や動物で作られた抗体を投与して即効性のある防御を得る方法を何というか。", options: ["受動免疫", "細胞性免疫", "能動免疫", "アジュバント効果", "自然免疫"], answer: 0 },
+      { id: 14, text: "補体系の「レクチン経路」において、非自己（細菌等）の認識の目印となる糖鎖はどれか。", options: ["グリコーゲン", "ヒアルロン酸", "マンノース", "シアル酸", "ガラクトース"], answer: 2 },
+      { id: 15, text: "成熟ナイーブB細胞の細胞表面に共発現している免疫グロブリンの組み合わせはどれか。", options: ["膜型 IgM と膜型 IgG", "膜型 IgM と膜型 IgD", "分泌型 IgA と膜型 IgM", "膜型 IgD と膜型 IgE", "膜型 IgA と膜型 IgG"], answer: 1 },
+      { id: 16, text: "補体成分C3の活性化を阻害、あるいは分解を促進する調節因子(インヒビター)はどれか。", options: ["C1q", "B 因子", "プロパージン", "D 因子", "H 因子"], answer: 4 },
+      { id: 17, text: "補体系の活性化において、Ca2+(カルシウムイオン)が必須となるステップはどれか。", options: ["レクチン経路におけるC3の分解", "C1複合体(C1q,C1r,C1s)の安定化と形成", "副経路におけるB因子の結合", "膜傷害複合体(MAC)の細胞膜への挿入", "C3転換酵素によるC3の分解"], answer: 1 }
     ];
+
+    // 配列および選択肢を精密にシャッフルし、正解インデックスの位置を100%正しく自動追従させるユーティリティ
+    const shuffleQuestionsAndOptions = (rawList) => {
+      const cloned = JSON.parse(JSON.stringify(rawList));
+      
+      // 1. 各問題の「選択肢」をランダムシャッフル＆正解追従
+      const shuffledOptionsList = cloned.map(q => {
+        const correctText = q.options[q.answer]; // 元の正解テキストを保存
+        
+        // 選択肢の配列をシャッフル (Fisher-Yates)
+        const opts = [...q.options];
+        for (let i = opts.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [opts[i], opts[j]] = [opts[j], opts[i]];
+        }
+        
+        // シャッフル後の正解位置（インデックス）を再探索して自動更新
+        const newAnswerIndex = opts.indexOf(correctText);
+        return {
+          ...q,
+          options: opts,
+          answer: newAnswerIndex
+        };
+      });
+
+      // 2. 「出題順」をランダムシャッフル
+      for (let i = shuffledOptionsList.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledOptionsList[i], shuffledOptionsList[j]] = [shuffledOptionsList[j], shuffledOptionsList[i]];
+      }
+
+      return shuffledOptionsList;
+    };
 
     function App() {
       const [user, setUser] = useState(null);
@@ -626,6 +660,9 @@
           const batch = db.batch();
           batch.set(db.doc(`artifacts/${appId}/public/data/game_state/current`), { status: 'lobby', currentQIndex: 0, questionStartTime: null, revealStage: 'idle' });
           
+          // リセット時にデフォルトの免疫学17問を最新シャッフルしてクラウドに書き戻す
+          batch.set(db.doc(`artifacts/${appId}/public/data/questions/custom`), { list: DEFAULT_QUESTIONS });
+
           const playersSnap = await db.collection(`artifacts/${appId}/public/data/players`).get();
           playersSnap.forEach((d) => batch.delete(d.ref));
           
@@ -635,6 +672,7 @@
           await batch.commit();
         } else {
           setGameState({ status: 'lobby', currentQIndex: 0, questionStartTime: null, revealStage: 'idle' });
+          setQuestions(DEFAULT_QUESTIONS);
           setPlayers([
             { id: 'offline-local-user-id', name: 'あなた（ゲスト）', score: 0 },
             { id: 'demo-p1', name: 'たろう', score: 20 },
@@ -690,15 +728,29 @@
         playSound('click');
       };
 
+      // ロビーから出題開始する際、問題を全ランダムシャッフルしてクラウド同期！
       const startQuestion = async () => {
         playSound('click');
+
+        // ロビーからの初出題時は「出題順」＆「選択肢の順番」を一括ランダムシャッフル！
+        let targetQuestions = questions;
+        if (gameState.status === 'lobby') {
+          targetQuestions = shuffleQuestionsAndOptions(questions.length > 0 ? questions : DEFAULT_QUESTIONS);
+          setQuestions(targetQuestions);
+        }
+
         if (isOnlineMode) {
           const batch = db.batch();
           const answersSnap = await db.collection(`artifacts/${appId}/public/data/answers`).get();
           answersSnap.forEach((d) => batch.delete(d.ref));
           
+          if (gameState.status === 'lobby') {
+            // シャッフル後の最新クイズリストをクラウドに保存して全スマホに一斉配信！
+            batch.set(db.doc(`artifacts/${appId}/public/data/questions/custom`), { list: targetQuestions });
+          }
+
           const nextIdx = gameState.status === 'lobby' ? 0 : gameState.currentQIndex + 1;
-          if (nextIdx >= questions.length) {
+          if (nextIdx >= targetQuestions.length) {
             await db.doc(`artifacts/${appId}/public/data/game_state/current`).update({ status: 'finished', revealStage: 'idle' });
           } else {
             batch.update(db.doc(`artifacts/${appId}/public/data/game_state/current`), {
@@ -712,7 +764,7 @@
         } else {
           setAnswers([]);
           const nextIdx = gameState.status === 'lobby' ? 0 : gameState.currentQIndex + 1;
-          if (nextIdx >= questions.length) setGameState(prev => ({ ...prev, status: 'finished', revealStage: 'idle' }));
+          if (nextIdx >= targetQuestions.length) setGameState(prev => ({ ...prev, status: 'finished', revealStage: 'idle' }));
           else setGameState({ status: 'reading_answering', currentQIndex: nextIdx, questionStartTime: Date.now(), revealStage: 'idle' });
         }
       };
@@ -994,7 +1046,7 @@
                       </div>
                     )}
 
-                    {/* 正解発表フェーズ：ここではまだ獲得ポイント結果を出さず、プロジェクター待機を案内 */}
+                    {/* 正解発表フェーズ */}
                     {gameState.status === 'reveal_answer' && currentQuestion && (
                       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-center space-y-3">
                         <h4 className="text-xs font-bold text-slate-400">アンサーチェック結果</h4>
@@ -1069,7 +1121,7 @@
         );
       }
 
-      // 3. 主催者ホスト画面（pb-14等を追加し下部BOARDリストとの重なりを100%防止！）
+      // 3. 主催者ホスト画面
       return (
         <div className="h-screen max-h-screen bg-slate-950 text-white flex flex-row p-0 overflow-hidden box-border">
           <div className="w-[80px] shrink-0 bg-slate-900/95 border-r border-slate-800 flex flex-col justify-between items-center py-4 z-50 h-full">
@@ -1128,13 +1180,12 @@
             </div>
           </div>
 
-          {}
-          {/* クイズメインモニターエリア：pb-14 を加えて画面最下部の参加者BOARDリストとの重なりを完全ガード！ */}
+          {/* クイズメインモニターエリア */}
           <div className="flex-grow flex flex-col justify-between p-4 pl-6 pr-4 pb-14 max-h-screen overflow-hidden box-border">
             <div className="bg-slate-900/90 border-b-2 border-amber-500/30 p-3 rounded-xl flex justify-between items-center shadow-lg shrink-0">
               <div className="flex items-center space-x-3">
                 <div className="bg-blue-600 p-1.5 rounded-lg border border-yellow-300 animate-pulse"><Zap className="w-5 h-5 text-yellow-300" /></div>
-                <h1 className="text-lg md:text-xl font-black bg-gradient-to-r from-yellow-300 to-rose-400 bg-clip-text text-transparent">検査技術学科 クイズバトル</h1>
+                <h1 className="text-lg md:text-xl font-black bg-gradient-to-r from-yellow-300 to-rose-400 bg-clip-text text-transparent">臨床検査技術学科 クイズバトル</h1>
               </div>
               <div className="text-right flex items-center space-x-4 font-mono text-sm">
                 <span className="text-slate-400">問題: <b className="text-white text-base">{gameState.currentQIndex + 1} / {questions.length}</b></span>
@@ -1242,8 +1293,7 @@
               )}
             </div>
 
-            {}
-            {/* 5選択肢パネル：余白と縦幅をすっきり調整して下部参加者リストとの被りを完全追放 */}
+            {/* 5選択肢パネル */}
             {gameState.status !== 'reveal_worst' && gameState.status !== 'reveal_answer' ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-w-4xl mx-auto w-full shrink-0 animate-fade-in">
                 {currentQuestion?.options.map((opt, oIdx) => {
@@ -1292,7 +1342,6 @@
             ) : null}
           </div>
 
-          {}
           {/* 問題編集モーダル */}
           {isEditingQuestions && (
             <div className="fixed inset-4 bg-slate-900/95 border-2 border-slate-800 rounded-2xl p-4 shadow-2xl flex flex-col justify-between z-50 animate-fade-in text-xs">
@@ -1350,7 +1399,6 @@
             </div>
           </div>
 
-          {}
           {/* ロビー */}
           {gameState.status === 'lobby' && !isEditingQuestions && (
             <div className="fixed inset-y-4 top-20 bottom-16 bg-slate-900 border-2 border-slate-800 rounded-3xl p-6 md:p-12 text-center flex flex-col justify-center items-center shadow-2xl z-20 animate-fade-in left-24 right-4">
