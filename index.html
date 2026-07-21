@@ -77,7 +77,7 @@
     const { useState, useEffect, useRef } = React;
 
     // ==========================================
-    // Firebaseの設定（hayaosi-quiz-94a65 有効化済み）
+    // Firebaseの設定
     // ==========================================
     let firebaseApp = null;
     let auth = null;
@@ -86,7 +86,6 @@
     let isOnlineMode = false;
 
     try {
-      // ご自身のFirebase設定値を直接定義して接続を有効化
       const myCustomConfig = {
         apiKey: "AIzaSyA9qezX-m9XR5sD1kDXr4GaSlIjmYcr1Js",
         authDomain: "hayaosi-quiz-94a65.firebaseapp.com",
@@ -111,9 +110,6 @@
       console.error("Firebase Initialization Failed. Switching to Offline Mode.", e);
     }
 
-    // ==========================================
-    // インラインSVGアイコン
-    // ==========================================
     const Crown = ({ className }) => (
       <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7z" /><path d="M5 20h14" />
@@ -352,7 +348,7 @@
         const unsubPlayers = playersColRef.onSnapshot((snap) => {
           const plist = [];
           snap.forEach((d) => { if (d.data()) plist.push({ id: d.id, ...d.data() }); });
-          plist.sort((a, b) => (b.score || 0) - (a.score || 0));
+          plist.sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
           setPlayers(plist);
         });
 
@@ -445,7 +441,7 @@
           const currentQ = questions[gameState.currentQIndex];
           const myAnsObj = answers.find(a => a.playerId === user?.uid);
           if (myAnsObj && currentQ) {
-            const isCorrect = myAnsObj.selectedOption === currentQ.answer;
+            const isCorrect = Number(myAnsObj.selectedOption) === Number(currentQ.answer);
             setIsCorrectLocal(isCorrect);
             playSound(isCorrect ? 'correct' : 'wrong');
           } else {
@@ -464,16 +460,17 @@
         const currentQ = questions[gameState.currentQIndex];
         if (!currentQ) return;
 
-        const correctAnswers = answers.filter(ans => ans && ans.selectedOption === currentQ.answer);
+        const correctAnswers = answers.filter(ans => ans && Number(ans.selectedOption) === Number(currentQ.answer));
         if (correctAnswers.length === 0) {
           setWorstPlayer(null); setFastestPlayer(null); setRevealStage('idle'); return;
         }
 
         const correctPlayersList = correctAnswers.map(ans => {
           const pInfo = players.find(p => p.id === ans.playerId);
-          return { id: ans.playerId, name: ans.playerName || pInfo?.name || 'ゲスト', time: ans.time || 15000 };
+          return { id: ans.playerId, name: ans.playerName || pInfo?.name || 'ゲスト', time: Number(ans.time) || 15000 };
         });
 
+        // 昇順（タイムが小さい＝速い順）に確実にソート！
         correctPlayersList.sort((a, b) => a.time - b.time);
         
         const fastest = correctPlayersList[0];
@@ -717,14 +714,14 @@
         else setGameState(prev => ({ ...prev, status: 'reveal_answer' }));
       };
 
-      // 感謝祭最新配点システム（最速15pt / 通常10pt / ワースト正解1pt）
+      // 配点システム（最速15pt / 通常10pt / ワースト1pt）の厳密な加算処理
       const revealWorstAndDistributePoints = async () => {
         const currentQ = questions[gameState.currentQIndex];
         if (!currentQ) return;
-        const correctAnswers = answers.filter(ans => ans && ans.selectedOption === currentQ.answer);
+        const correctAnswers = answers.filter(ans => ans && Number(ans.selectedOption) === Number(currentQ.answer));
         
-        // 正解者をタイム順（昇順：a.time - b.time）にソート
-        const sortedCorrect = [...correctAnswers].sort((a, b) => (a.time || 0) - (b.time || 0));
+        // 正解者をタイム順（昇順：a.time - b.time）に確実にソート！
+        const sortedCorrect = [...correctAnswers].sort((a, b) => (Number(a.time) || 0) - (Number(b.time) || 0));
         
         const fastestId = sortedCorrect.length > 0 ? sortedCorrect[0]?.playerId : null;
         const worstId = sortedCorrect.length > 1 ? sortedCorrect[sortedCorrect.length - 1]?.playerId : null;
@@ -749,7 +746,8 @@
                 }
               }
 
-              batch.update(pDocRef, { score: (p.score || 0) + ptsToAdd });
+              const currentScore = Number(p.score) || 0;
+              batch.update(pDocRef, { score: currentScore + ptsToAdd });
             }
           }
           await batch.commit();
@@ -765,7 +763,7 @@
               else if (isWorst) ptsToAdd = 1;
               else ptsToAdd = 10;
             }
-            return { ...p, score: (p.score || 0) + ptsToAdd };
+            return { ...p, score: (Number(p.score) || 0) + ptsToAdd };
           }));
         }
 
@@ -982,18 +980,19 @@
                       </div>
                     )}
 
+                    {/* 正解発表フェーズ：ここではまだ獲得ポイント結果を出さず、プロジェクター待機を案内 */}
                     {gameState.status === 'reveal_answer' && currentQuestion && (
                       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-center space-y-3">
                         <h4 className="text-xs font-bold text-slate-400">アンサーチェック結果</h4>
                         {isCorrectLocal ? (
                           <div className="space-y-1">
                             <CheckCircle className="w-12 h-12 text-emerald-400 mx-auto animate-bounce" />
-                            <h4 className="text-xl font-black text-emerald-400">正解！</h4>
-                            <p className="text-[11px] text-slate-300">早押しが最速なら15pt！最遅でなければ10pt獲得です！</p>
+                            <h4 className="text-xl font-black text-emerald-400">見事、正解！</h4>
+                            <p className="text-[11px] text-slate-300">プロジェクター画面での「タイム集計（STEP 4）」をお待ちください！</p>
                           </div>
                         ) : (
                           <div className="bg-slate-950 p-3 rounded-xl border border-blue-500/20 space-y-1">
-                            <h4 className="text-lg font-black text-amber-400">不正解 (0pt)</h4>
+                            <h4 className="text-lg font-black text-amber-400">不正解</h4>
                             <p className="text-[11px] text-slate-300">
                               あなたの選択: <b className="text-rose-400">{myAnswer !== null ? myAnswer + 1 : "未回答(タイムオーバー)"}</b><br />
                               正解は: <b className="text-emerald-400">{currentQuestion.answer + 1}</b>
@@ -1003,14 +1002,17 @@
                       </div>
                     )}
 
+                    {/* ポイント確定フェーズ（STEP 4: reveal_worst 後）に正解順位ポイント結果をしっかり表示！ */}
                     {gameState.status === 'reveal_worst' && (
                       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-center space-y-3 animate-fade-in">
-                        <h4 className="text-xs font-bold text-slate-400">早押しタイム発表</h4>
+                        <h4 className="text-xs font-bold text-slate-400">早押し集計 ＆ ポイント結果</h4>
                         <div className="bg-slate-950 p-4 rounded-xl space-y-1 border border-slate-800">
                           {isCorrectLocal ? (
                             <div>
-                              <h4 className="text-base font-black text-emerald-400">ポイント獲得！</h4>
-                              <p className="text-[11px] text-slate-300">正解順位の早押しタイムに応じたポイントが加算されました！</p>
+                              <h4 className="text-base font-black text-emerald-400">ポイント加算完了！</h4>
+                              <p className="text-[11px] text-slate-300">
+                                タイム順位に応じたポイント（最速15pt / 通常10pt / 最遅1pt）が加算されました！
+                              </p>
                             </div>
                           ) : (
                             <div>
@@ -1018,7 +1020,7 @@
                               <p className="text-[11px] text-slate-400">クイズ不正解、またはタイムアップ未回答でした。</p>
                             </div>
                           )}
-                          <p className="text-[10px] text-slate-500 mt-2">※全員次の問題も続けて回答できます！</p>
+                          <p className="text-[10px] text-slate-500 mt-2">※次の問題も続けて回答できます！</p>
                         </div>
                       </div>
                     )}
@@ -1042,7 +1044,7 @@
         );
       }
 
-      // 3. 主催者ホスト画面（幅80pxのスリムリモコン常駐）
+      // 3. 主催者ホスト画面（pb-14等を追加し下部BOARDリストとの重なりを100%防止！）
       return (
         <div className="h-screen max-h-screen bg-slate-950 text-white flex flex-row p-0 overflow-hidden box-border">
           <div className="w-[80px] shrink-0 bg-slate-900/95 border-r border-slate-800 flex flex-col justify-between items-center py-4 z-50 h-full">
@@ -1097,11 +1099,13 @@
               <button onClick={() => setIsMuted(!isMuted)} className="w-7 h-7 rounded bg-slate-800 hover:bg-slate-700 text-xs flex items-center justify-center">
                 {isMuted ? "🔇" : "🔊"}
               </button>
-              <span className="text-[8px] text-slate-600">v3.0</span>
+              <span className="text-[8px] text-slate-600">v3.1</span>
             </div>
           </div>
 
-          <div className="flex-grow flex flex-col justify-between p-4 pl-6 pr-4 max-h-screen overflow-hidden box-border">
+          {}
+          {/* クイズメインモニターエリア：pb-14 を加えて画面最下部の参加者BOARDリストとの重なりを完全ガード！ */}
+          <div className="flex-grow flex flex-col justify-between p-4 pl-6 pr-4 pb-14 max-h-screen overflow-hidden box-border">
             <div className="bg-slate-900/90 border-b-2 border-amber-500/30 p-3 rounded-xl flex justify-between items-center shadow-lg shrink-0">
               <div className="flex items-center space-x-3">
                 <div className="bg-blue-600 p-1.5 rounded-lg border border-yellow-300 animate-pulse"><Zap className="w-5 h-5 text-yellow-300" /></div>
@@ -1125,7 +1129,7 @@
               </div>
             )}
 
-            <div className="flex-grow bg-slate-900/70 border-2 border-slate-800 rounded-2xl p-4 flex flex-col justify-center items-center relative overflow-hidden shadow-inner min-h-[220px] my-3">
+            <div className="flex-grow bg-slate-900/70 border-2 border-slate-800 rounded-2xl p-4 flex flex-col justify-center items-center relative overflow-hidden shadow-inner min-h-[200px] my-2">
               {gameState.status === 'reading_answering' && timeLeft > 13.5 && (
                 <div className="absolute inset-0 bg-slate-950/95 flex items-center justify-center z-40">
                   <div className="bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-slate-950 font-black text-4xl md:text-6xl py-4 px-10 rounded-xl shadow-2xl border-4 border-white tracking-widest anonymity animate-banner">READY GO!</div>
@@ -1134,7 +1138,7 @@
 
               {gameState.status !== 'reveal_worst' && gameState.status !== 'reveal_answer' && (
                 <div className="text-center w-full max-w-4xl px-2 animate-fade-in">
-                  <h2 className="text-xl md:text-3.5xl lg:text-4.5xl font-black text-yellow-100 leading-relaxed tracking-wide drop-shadow-md">
+                  <h2 className="text-xl md:text-3xl lg:text-4xl font-black text-yellow-100 leading-relaxed tracking-wide drop-shadow-md">
                     {currentQuestion ? currentQuestion.text : "問題が読み込まれるのを待っています..."}
                   </h2>
                 </div>
@@ -1182,9 +1186,9 @@
                   )}
 
                   {revealStage === 'showing_worst' && (
-                    <div className="flex flex-col space-y-6 items-center w-full">
+                    <div className="flex flex-col space-y-4 items-center w-full">
                       {fastestPlayer && (
-                        <div className="bg-gradient-to-br from-yellow-500/10 via-yellow-500/15 to-yellow-500/10 border border-yellow-500/30 p-4 rounded-xl text-center shadow-lg w-full max-w-lg">
+                        <div className="bg-gradient-to-br from-yellow-500/10 via-yellow-500/15 to-yellow-500/10 border border-yellow-500/30 p-3 rounded-xl text-center shadow-lg w-full max-w-lg">
                           <span className="text-xs text-yellow-300 font-black tracking-widest block uppercase font-bold">FASTEST CHAMPION (最速解答者 15pt)</span>
                           <h4 className="text-xl md:text-2xl font-black text-yellow-200 mt-1 truncate">{fastestPlayer.name} さん</h4>
                           <p className="text-xs text-slate-300 font-mono mt-0.5">早押しタイム: <b className="text-white font-bold">{((fastestPlayer.time || 0)/1000).toFixed(3)}</b> 秒</p>
@@ -1192,12 +1196,12 @@
                       )}
 
                       {worstPlayer && (
-                        <div className="bg-slate-950 border-4 border-indigo-500 p-6 rounded-3xl text-center shadow-[0_0_35px_rgba(99,102,241,0.5)] w-full max-w-xl animate-fade-in">
-                          <span className="text-sm text-indigo-400 font-black tracking-widest block uppercase font-bold">TOUCH OF THE DELAY (最遅正解者 1pt)</span>
-                          <h4 className={`text-4xl md:text-7xl font-black text-indigo-300 mt-2 truncate ${isFlashingActive ? 'animate-flash' : ''}`}>
+                        <div className="bg-slate-950 border-4 border-indigo-500 p-5 rounded-3xl text-center shadow-[0_0_35px_rgba(99,102,241,0.5)] w-full max-w-xl animate-fade-in">
+                          <span className="text-xs text-indigo-400 font-black tracking-widest block uppercase font-bold">TOUCH OF THE DELAY (最遅正解者 1pt)</span>
+                          <h4 className={`text-3xl md:text-6xl font-black text-indigo-300 mt-1 truncate ${isFlashingActive ? 'animate-flash' : ''}`}>
                             {worstPlayer.name} さん
                           </h4>
-                          <p className="text-sm text-slate-400 mt-2 font-bold">早押しタイム: <b className="text-white text-lg font-mono">{((worstPlayer.time || 0)/1000).toFixed(3)}</b> 秒</p>
+                          <p className="text-xs text-slate-400 mt-1 font-bold">早押しタイム: <b className="text-white text-base font-mono">{((worstPlayer.time || 0)/1000).toFixed(3)}</b> 秒</p>
                         </div>
                       )}
                     </div>
@@ -1213,8 +1217,10 @@
               )}
             </div>
 
+            {}
+            {/* 5選択肢パネル：余白と縦幅をすっきり調整して下部参加者リストとの被りを完全追放 */}
             {gameState.status !== 'reveal_worst' && gameState.status !== 'reveal_answer' ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 max-w-4xl mx-auto w-full shrink-0 animate-fade-in">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-w-4xl mx-auto w-full shrink-0 animate-fade-in">
                 {currentQuestion?.options.map((opt, oIdx) => {
                   const isCorrect = oIdx === currentQuestion.answer;
                   const isPollState = gameState.status === 'reveal_poll';
@@ -1238,13 +1244,13 @@
                     : colorClasses[oIdx];
 
                   return (
-                    <div key={oIdx} className={`p-3.5 rounded-xl border-2 relative overflow-hidden transition-all duration-300 ${highlightClass}`}>
+                    <div key={oIdx} className={`p-2.5 rounded-xl border-2 relative overflow-hidden transition-all duration-300 ${highlightClass}`}>
                       {(isPollState || isAnswerState) && (
                         <div className={`absolute left-0 top-0 bottom-0 opacity-20 transition-all duration-1000 ${isAnswerState && isCorrect ? 'bg-emerald-500' : 'bg-blue-500'}`} style={{ width: `${percentage}%` }} />
                       )}
                       <div className="relative z-10 flex justify-between items-center text-sm md:text-base">
-                        <span className="font-bold flex items-center space-x-3">
-                          <span className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black border ${isAnswerState && isCorrect ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900'}`}>{oIdx + 1}</span>
+                        <span className="font-bold flex items-center space-x-2">
+                          <span className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-black border ${isAnswerState && isCorrect ? 'bg-emerald-500 text-slate-950' : 'bg-slate-900'}`}>{oIdx + 1}</span>
                           <span>{opt}</span>
                         </span>
                         {(isPollState || isAnswerState) && (
@@ -1261,6 +1267,7 @@
             ) : null}
           </div>
 
+          {}
           {/* 問題編集モーダル */}
           {isEditingQuestions && (
             <div className="fixed inset-4 bg-slate-900/95 border-2 border-slate-800 rounded-2xl p-4 shadow-2xl flex flex-col justify-between z-50 animate-fade-in text-xs">
@@ -1295,8 +1302,8 @@
             </div>
           )}
 
-          {/* 下部参加者リスト */}
-          <div className="bg-slate-900/60 border-t border-slate-800/60 p-1.5 rounded-xl flex items-center space-x-2 overflow-x-auto no-scrollbar max-h-[45px] box-border shrink-0 fixed bottom-2 right-4 left-24">
+          {/* 最下部固定参加者リスト（BOARD） */}
+          <div className="bg-slate-900/90 border-t border-slate-800/80 p-1.5 rounded-xl flex items-center space-x-2 overflow-x-auto no-scrollbar max-h-[45px] box-border shrink-0 fixed bottom-1 right-4 left-24 z-30">
             <div className="flex items-center space-x-1.5 shrink-0 text-slate-500 text-[10px] font-black uppercase tracking-wider border-r border-slate-800 pr-2">
               <Users className="w-3.5 h-3.5 text-blue-400" /> <span>BOARD ({players.length})</span>
             </div>
@@ -1318,6 +1325,7 @@
             </div>
           </div>
 
+          {}
           {/* ロビー */}
           {gameState.status === 'lobby' && !isEditingQuestions && (
             <div className="fixed inset-y-4 top-20 bottom-16 bg-slate-900 border-2 border-slate-800 rounded-3xl p-6 md:p-12 text-center flex flex-col justify-center items-center shadow-2xl z-20 animate-fade-in left-24 right-4">
@@ -1380,7 +1388,7 @@
 
                   <div className="flex-grow grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 overflow-y-auto no-scrollbar max-h-[55vh] py-2 border-y border-slate-800">
                     {[...players]
-                      .sort((a, b) => (b.score || 0) - (a.score || 0))
+                      .sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0))
                       .slice(0, 30)
                       .map((p, idx) => {
                         const isRevealed = revealRankIndex === -1 || idx > revealRankIndex;
