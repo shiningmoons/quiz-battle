@@ -183,14 +183,15 @@
       const cloned = JSON.parse(JSON.stringify(rawList));
       
       const shuffledOptionsList = cloned.map(q => {
-        const correctText = q.options[q.answer];
+        const correctAnsIdx = Number(q.answer);
+        const correctText = q.options[correctAnsIdx];
         const opts = [...q.options];
         for (let i = opts.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [opts[i], opts[j]] = [opts[j], opts[i]];
         }
         const newAnswerIndex = opts.indexOf(correctText);
-        return { ...q, options: opts, answer: newAnswerIndex };
+        return { ...q, options: opts, answer: newAnswerIndex >= 0 ? newAnswerIndex : correctAnsIdx };
       });
 
       for (let i = shuffledOptionsList.length - 1; i > 0; i--) {
@@ -750,6 +751,7 @@
         playSound('click');
       };
 
+      // 出題開始（問題シャッフルの確実な事前同期）
       const startQuestion = async () => {
         playSound('click');
 
@@ -760,26 +762,29 @@
         }
 
         if (isOnlineMode) {
-          const batch = db.batch();
+          // 1. 回答データをリセット
           const answersSnap = await db.collection(`artifacts/${appId}/public/data/answers`).get();
-          answersSnap.forEach((d) => batch.delete(d.ref));
-          
+          const batch1 = db.batch();
+          answersSnap.forEach((d) => batch1.delete(d.ref));
+          await batch1.commit();
+
+          // 2. ロビーからの開始時はシャッフル問題を先にクラウドへ完全保存（同期ラグを根絶）
           if (gameState.status === 'lobby') {
-            batch.set(db.doc(`artifacts/${appId}/public/data/questions/custom`), { list: targetQuestions });
+            await db.doc(`artifacts/${appId}/public/data/questions/custom`).set({ list: targetQuestions });
           }
 
+          // 3. ゲームステータスを更新
           const nextIdx = gameState.status === 'lobby' ? 0 : gameState.currentQIndex + 1;
           if (nextIdx >= targetQuestions.length) {
             await db.doc(`artifacts/${appId}/public/data/game_state/current`).update({ status: 'finished', revealStage: 'idle' });
           } else {
-            batch.update(db.doc(`artifacts/${appId}/public/data/game_state/current`), {
+            await db.doc(`artifacts/${appId}/public/data/game_state/current`).update({
               status: 'reading_answering',
               currentQIndex: nextIdx,
               questionStartTime: Date.now(),
               revealStage: 'idle'
             });
           }
-          await batch.commit();
         } else {
           setAnswers([]);
           const nextIdx = gameState.status === 'lobby' ? 0 : gameState.currentQIndex + 1;
@@ -788,9 +793,10 @@
         }
       };
 
+      // 締め切り時：自動でランキングにいかず、正しく STEP 2 (reveal_poll) へ遷移
       const stopAnsweringAndShowPoll = async () => {
-        if (isOnlineMode) await db.doc(`artifacts/${appId}/public/data/game_state/current`).update({ status: 'reveal_worst', revealStage: 'showing_losers' });
-        else setGameState(prev => ({ ...prev, status: 'reveal_worst', revealStage: 'showing_losers' }));
+        if (isOnlineMode) await db.doc(`artifacts/${appId}/public/data/game_state/current`).update({ status: 'reveal_poll', revealStage: 'idle' });
+        else setGameState(prev => ({ ...prev, status: 'reveal_poll', revealStage: 'idle' }));
       };
 
       const revealAnswer = async () => {
