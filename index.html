@@ -14,15 +14,14 @@
   <!-- Babel (ブラウザ上トランスパイラ) -->
   <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
   <script>
-    // Classicランタイムを強制し、ブラウザ上でのJSXのパース衝突を100%解決するカスタムプリセットの登録
-    Babel.registerPreset('classic-react', {
-      presets: [
-        [Babel.availablePresets['react'], { runtime: 'classic' }]
-      ]
-    });
+    // Classic React JSXトランスパイル（React.createElement）を強制適用するカスタムプラグインを事前登録
+    Babel.registerPlugin('transform-react-jsx-classic', [
+      Babel.availablePlugins['transform-react-jsx'],
+      { runtime: 'classic' }
+    ]);
   </script>
 
-  <!-- Firebase SDK Compat版 (ESモジュール競合を防止する堅牢なグローバルCDN) -->
+  <!-- Firebase SDK Compat版 -->
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
@@ -61,7 +60,6 @@
       font-family: 'Courier New', Courier, monospace;
       text-shadow: 0 0 12px rgba(234, 179, 8, 0.7);
     }
-    /* 横スクロール対応・スクロールバー非表示 */
     .no-scrollbar::-webkit-scrollbar {
       display: none;
     }
@@ -73,55 +71,41 @@
 </head>
 <body class="bg-slate-950 text-white min-h-screen select-none scanlines overflow-hidden">
 
-  <!-- クリーンなReactの描画ツリーのみで制御 -->
   <div id="root" class="h-full"></div>
 
-  <!-- 登録したカスタムプリセット classic-react を適用してトランスパイルを実行 -->
-  <script type="text/babel" data-presets="classic-react">
+  <script type="text/babel" data-presets="env" data-plugins="transform-react-jsx-classic">
     const { useState, useEffect, useRef } = React;
 
     // ==========================================
-    // Firebaseの安全な初期化と環境判定
+    // Firebaseの設定（hayaosi-quiz-94a65 有効化済み）
     // ==========================================
     let firebaseApp = null;
     let auth = null;
     let db = null;
-    let appId = 'early-buzz-quiz';
+    let appId = 'hayaosi-quiz-room-1';
     let isOnlineMode = false;
 
     try {
-      let config = null;
-      if (typeof __firebase_config !== 'undefined' && __firebase_config) {
-        config = JSON.parse(__firebase_config);
-      }
-      
-      // ==========================================
-      // 【Googleサイトなどで自主運用・同期テストを行う場合】
-      // 下記の myCustomConfig のコメントアウトを解除し、Firebaseプロジェクトの設定値を直書きしてください。
-      // Firestoreと匿名(Anonymous)認証を有効にすれば、PCとスマホが完璧に同期します。
-      // ==========================================
-      /*
+      // ご自身のFirebase設定値を直接定義して接続を有効化
       const myCustomConfig = {
         apiKey: "AIzaSyA9qezX-m9XR5sD1kDXr4GaSlIjmYcr1Js",
         authDomain: "hayaosi-quiz-94a65.firebaseapp.com",
         projectId: "hayaosi-quiz-94a65",
         storageBucket: "hayaosi-quiz-94a65.firebasestorage.app",
         messagingSenderId: "938814916805",
-        appId: "1:938814916805:web:91538e06e0bd5f329b08ac"
+        appId: "1:938814916805:web:91538e06e0bd5f329b08ac",
         measurementId: "G-B7BNN9N35D"
       };
-      config = myCustomConfig;
-      */
 
-      if (config && window.firebase) {
-        firebaseApp = window.firebase.initializeApp(config);
+      if (window.firebase) {
+        firebaseApp = window.firebase.initializeApp(myCustomConfig);
         auth = window.firebase.auth();
         db = window.firebase.firestore();
-        appId = typeof __app_id !== 'undefined' ? __app_id : 'early-buzz-quiz';
+        appId = 'hayaosi-quiz-room-1';
         isOnlineMode = true;
         console.log("Firebase Online Mode Initialized.");
       } else {
-        console.warn("Firebase config is missing. Running in Offline Demo Mode.");
+        console.warn("Firebase SDK is missing. Running in Offline Demo Mode.");
       }
     } catch (e) {
       console.error("Firebase Initialization Failed. Switching to Offline Mode.", e);
@@ -143,43 +127,9 @@
       </svg>
     );
 
-    const Volume2 = ({ className }) => (
-      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-        <path d="M15.54 8.46a5 5 0 0 1 0 7.07" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-      </svg>
-    );
-
-    const VolumeX = ({ className }) => (
-      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
-        <line x1="22" y1="9" x2="16" y2="15" /><line x1="16" y1="9" x2="22" y2="15" />
-      </svg>
-    );
-
     const Zap = ({ className }) => (
       <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-      </svg>
-    );
-
-    const Clock = ({ className }) => (
-      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" />
-      </svg>
-    );
-
-    const Plus = ({ className }) => (
-      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" />
-      </svg>
-    );
-
-    const Trash2 = ({ className }) => (
-      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <polyline points="3 6 5 6 21 6" />
-        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
-        <line x1="10" y1="11" x2="10" y2="17" /><line x1="14" y1="11" x2="14" y2="17" />
       </svg>
     );
 
@@ -196,12 +146,6 @@
       </svg>
     );
 
-    const XCircle = ({ className }) => (
-      <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        <circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" />
-      </svg>
-    );
-
     const BarChart = ({ className }) => (
       <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
         <line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="20" /><line x1="6" y1="20" x2="6" y2="14" />
@@ -215,9 +159,6 @@
       </svg>
     );
 
-    // ==========================================
-    // クイズ用設問データ
-    // ==========================================
     const DEFAULT_QUESTIONS = [
       { id: 1, text: "太陽系で最も大きい惑星はどれ？", options: ["地球", "火星", "木星", "土星", "海王星"], answer: 2 },
       { id: 2, text: "日本で一番高い山は富士山ですが、二番目に高い山は？", options: ["北岳", "槍ヶ岳", "奥穂高岳", "間ノ岳", "乗鞍岳"], answer: 0 },
@@ -226,39 +167,36 @@
       { id: 5, text: "世界で最も面積の広い国はどこ？", options: ["カナダ", "アメリカ", "中国", "ロシア", "ブラジル"], answer: 3 },
       { id: 6, text: "水（H2O）を電気分解したとき、陰極（マイナス極）から発生する気体は？", options: ["酸素", "水素", "二酸化炭素", "窒素", "塩素"], answer: 1 },
       { id: 7, text: "ことわざ「犬も歩けば棒に当たる」の次の句（本来の意味）として近いのは？", options: ["災難に遭う", "幸運に出会う", "道に迷う", "怪我をする", "友達ができる"], answer: 0 },
-      { id: 8, text: "トランプ of カードはジョーカーを除くと全部で何枚？", options: ["48枚", "50枚", "52枚", "54枚", "56枚"], answer: 2 },
+      { id: 8, text: "トランプのカードはジョーカーを除くと全部で何枚？", options: ["48枚", "50枚", "52枚", "54枚", "56枚"], answer: 2 },
       { id: 9, text: "元素記号「Au」で表される金属はどれ？", options: ["銀", "銅", "鉄", "金", "白金"], answer: 3 },
       { id: 10, text: "日本国憲法が公布された日はいつ？", options: ["5月3日", "11月3日", "2月11日", "8月15日", "12月23日"], answer: 1 },
       { id: 11, text: "世界で最も長い川はどれ？", options: ["アマゾン川", "ナイル川", "長江", "ミシシッピ川", "信濃川"], answer: 1 },
       { id: 12, text: "日本の都道府県で、最も面積が小さいのはどこ？", options: ["東京都", "大阪府", "香川県", "沖縄県", "鳥取県"], answer: 2 },
-      { id: 13, text: "一般的なサッカーの試合で、1チーム of ピッチ上の選手数は何人？", options: ["9人", "10人", "11人", "12人", "15人"], answer: 2 },
+      { id: 13, text: "一般的なサッカーの試合で、1チームのピッチ上の選手数は何人？", options: ["9人", "10人", "11人", "12人", "15人"], answer: 2 },
       { id: 14, text: "「人間は考える葦である」という言葉を残したフランスの哲学者は？", options: ["デカルト", "パスカル", "ルソー", "サルトル", "モンテーニュ"], answer: 1 },
       { id: 15, text: "世界一高い自立式電波塔「東京スカイツリー」の高さは何メートル？", options: ["333m", "555m", "634m", "777m", "1000m"], answer: 2 },
       { id: 16, text: "哺乳類の中で、唯一自力で空を飛ぶことができるのはどれ？", options: ["モモンガ", "ムササビ", "コウモリ", "ペンギン", "ダチョウ"], answer: 2 },
       { id: 17, text: "ダイヤモンドは何の元素からできている？", options: ["炭素", "水素", "窒素", "酸素", "ケイ素"], answer: 0 },
       { id: 18, text: "日本の初代内閣総理大臣は誰？", options: ["板垣退助", "伊藤博文", "大隈重信", "西郷隆盛", "山県有朋"], answer: 1 },
-      { id: 19, text: "オリンピックの五輪マークの青、黄、黒、緑、あと一つの色は？", options: ["紫", "オレンジ", "白", "赤", "pink"], answer: 3 },
+      { id: 19, text: "オリンピックの五輪マークの青、黄、黒、緑、あと一つの色は？", options: ["紫", "オレンジ", "白", "赤", "ピンク"], answer: 3 },
       { id: 20, text: "1年は365日ですが、うるう年は何日？", options: ["364日", "365日", "366日", "367日", "368日"], answer: 2 }
     ];
 
     function App() {
-      // 共通ステート
       const [user, setUser] = useState(null);
-      const [role, setRole] = useState(null); // 'host' | 'player'
+      const [role, setRole] = useState(null);
       const [playerName, setPlayerName] = useState('');
       const [hasJoined, setHasJoined] = useState(false);
       const [isMuted, setIsMuted] = useState(false);
 
       const [questions, setQuestions] = useState(DEFAULT_QUESTIONS);
       
-      // クイズ編集ステート
       const [isEditingQuestions, setIsEditingQuestions] = useState(false);
       const [selectedEditIndex, setSelectedEditIndex] = useState(0);
       const [editQuestionText, setEditQuestionText] = useState('');
       const [editOptions, setEditOptions] = useState(["", "", "", "", ""]);
       const [editAnswerIndex, setEditAnswerIndex] = useState(0);
 
-      // 同期ステート
       const [gameState, setGameState] = useState({
         status: 'lobby', 
         currentQIndex: 0,
@@ -267,37 +205,25 @@
       const [players, setPlayers] = useState([]);
       const [answers, setAnswers] = useState([]);
 
-      // プレイヤー用ステート（「お休みシステム」は完全に廃止）
       const [hasAnswered, setHasAnswered] = useState(false);
       const [myAnswer, setMyAnswer] = useState(null);
       const [myAnswerTime, setMyAnswerTime] = useState(null);
       const [isCorrectLocal, setIsCorrectLocal] = useState(false);
 
-      // シンキングタイム：15秒
       const [timeLeft, setTimeLeft] = useState(15.00);
 
-      // 演出用
       const [revealStage, setRevealStage] = useState('idle');
       const [visibleLosers, setVisibleLosers] = useState([]);
       const [countdownNum, setCountdownNum] = useState(3);
       const [worstPlayer, setWorstPlayer] = useState(null);
       const [fastestPlayer, setFastestPlayer] = useState(null);
 
-      // 点滅時間を制御するフラグ
       const [isFlashingActive, setIsFlashingActive] = useState(false);
       const flashTimeoutRef = useRef(null);
 
-      // 最終順位発表用(カウントアップ表示)
       const [revealRankIndex, setRevealRankIndex] = useState(-1);
       const [revealRankingActive, setRevealRankActive] = useState(false);
 
-      // リモコンパネル（操作盤）の開閉状態（極極細スリム化のためデフォルト閉設定）
-      const [isRemoteOpen, setIsRemoteOpen] = useState(false);
-
-      const [shareUrl, setShareUrl] = useState('');
-      const [isLocalFileError, setIsLocalFileError] = useState(false);
-
-      // 状態リフレッシュ競合を完全に排除するRef
       const prevStatusRef = useRef(null);
       const prevQIndexRef = useRef(null);
 
@@ -307,18 +233,8 @@
         if (roleParam === 'player') {
           setRole('player');
         }
-
-        const currentUrl = window.location.href;
-        if (currentUrl.startsWith('file:///')) {
-          setIsLocalFileError(true);
-          setShareUrl('https://<your-username>.github.io/repository-name/?role=player');
-        } else {
-          const base = currentUrl.split('?')[0];
-          setShareUrl(`${base}?role=player`);
-        }
       }, []);
 
-      // サウンド再生
       const playSound = (type) => {
         if (isMuted) return;
         try {
@@ -335,14 +251,6 @@
             gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
             osc.start();
             osc.stop(ctx.currentTime + 0.1);
-          } else if (type === 'buzz') {
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(150, ctx.currentTime);
-            osc.frequency.linearRampToValueAtTime(600, ctx.currentTime + 0.15);
-            gain.gain.setValueAtTime(0.15, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
-            osc.start();
-            osc.stop(ctx.currentTime + 0.25);
           } else if (type === 'drumroll') {
             osc.type = 'triangle';
             osc.frequency.setValueAtTime(120, ctx.currentTime);
@@ -396,7 +304,7 @@
         }
       };
 
-      // 認証
+      // 認証（匿名認証）
       useEffect(() => {
         if (!isOnlineMode) {
           setUser({ uid: 'offline-local-user-id' });
@@ -407,13 +315,9 @@
 
         const initAuth = async () => {
           try {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-              await auth.signInWithCustomToken(__initial_auth_token);
-            } else {
-              await auth.signInAnonymously();
-            }
+            await auth.signInAnonymously();
           } catch (error) {
-            console.error(error);
+            console.error("Auth failed", error);
           }
         };
         initAuth();
@@ -430,29 +334,17 @@
 
       // データ同期
       useEffect(() => {
-        if (!user) return;
-
-        if (!isOnlineMode) {
-          setPlayers([
-            { id: 'offline-local-user-id', name: 'あなた（ゲスト）', score: 0 },
-            { id: 'demo-p1', name: 'たろう', score: 20 },
-            { id: 'demo-p2', name: 'はなこ', score: 10 },
-            { id: 'demo-p3', name: 'けんた', score: 30 }
-          ]);
-          return;
-        }
+        if (!user || !isOnlineMode) return;
 
         const gameStateDocRef = db.doc(`artifacts/${appId}/public/data/game_state/current`);
         const unsubGameState = gameStateDocRef.onSnapshot((snap) => {
-          const exists = snap && (typeof snap.exists === 'function' ? snap.exists() : snap.exists);
-          if (exists) setGameState(snap.data());
+          if (snap.exists) setGameState(snap.data());
           else gameStateDocRef.set({ status: 'lobby', currentQIndex: 0, questionStartTime: null });
         });
 
         const customQuestionsDocRef = db.doc(`artifacts/${appId}/public/data/questions/custom`);
         const unsubQuestions = customQuestionsDocRef.onSnapshot((snap) => {
-          const exists = snap && (typeof snap.exists === 'function' ? snap.exists() : snap.exists);
-          if (exists) { const d = snap.data(); if (d?.list) setQuestions(d.list); }
+          if (snap.exists) { const d = snap.data(); if (d?.list) setQuestions(d.list); }
           else customQuestionsDocRef.set({ list: DEFAULT_QUESTIONS });
         });
 
@@ -479,7 +371,7 @@
         };
       }, [user]);
 
-      // 15秒リアルタイム同期タイマー
+      // タイマー
       useEffect(() => {
         if (gameState.status !== 'reading_answering' || !gameState.questionStartTime) {
           setTimeLeft(15.00);
@@ -510,36 +402,30 @@
         return () => clearInterval(interval);
       }, [gameState.status, gameState.questionStartTime, role]);
 
-      // 2秒限定の点滅タイマー制御（正解発表）
+      // 点滅タイマー
       useEffect(() => {
         if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
         setIsFlashingActive(false);
 
         if (gameState.status === 'reveal_answer') {
           setIsFlashingActive(true);
-          flashTimeoutRef.current = setTimeout(() => {
-            setIsFlashingActive(false); // 2秒後に通常点灯表示に戻す
-          }, 2000);
+          flashTimeoutRef.current = setTimeout(() => setIsFlashingActive(false), 2000);
         }
       }, [gameState.status]);
 
-      // 2秒限定の点滅タイマー制御（最遅ワースト発表）
       useEffect(() => {
         if (gameState.status === 'reveal_worst' && revealStage === 'showing_worst') {
           setIsFlashingActive(true);
           if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
-          flashTimeoutRef.current = setTimeout(() => {
-            setIsFlashingActive(false); // 2秒後に通常表示に戻す
-          }, 2000);
+          flashTimeoutRef.current = setTimeout(() => setIsFlashingActive(false), 2000);
         }
       }, [gameState.status, revealStage]);
 
-      // 【チラつき・リセットを100%解決した厳密ステート同期制御】
+      // ステート同期
       useEffect(() => {
         const statusChanged = prevStatusRef.current !== gameState.status;
         const qIndexChanged = prevQIndexRef.current !== gameState.currentQIndex;
 
-        // 次の問題が出題された「その瞬間」にだけリセットをかける
         if (statusChanged || qIndexChanged) {
           if (gameState.status === 'reading_answering') {
             setHasAnswered(false);
@@ -588,7 +474,6 @@
           return { id: ans.playerId, name: ans.playerName || pInfo?.name || 'ゲスト', time: ans.time || 15000 };
         });
 
-        // 早押しが速い（timeが小さい）順にソート
         correctPlayersList.sort((a, b) => a.time - b.time);
         
         const fastest = correctPlayersList[0];
@@ -597,7 +482,6 @@
         setFastestPlayer(fastest);
         setWorstPlayer(worst);
 
-        // 候補アニメーション用の下位10名（遅い順）
         const sortedDelay = [...correctPlayersList].reverse();
         const worstTenExcludingFirst = sortedDelay.slice(0, 10);
         triggerWorstAnimationSequence(worstTenExcludingFirst, worst);
@@ -670,7 +554,6 @@
         }
       };
 
-      // クイズ編集に関連するメソッド
       const openQuestionEditor = () => {
         playSound('click');
         setIsEditingQuestions(true);
@@ -723,7 +606,6 @@
         setIsEditingQuestions(false);
       };
 
-      // 全データリセット
       const resetGame = async () => {
         playSound('gong');
         setRevealStage('idle');
@@ -753,7 +635,6 @@
         }
       };
 
-      // デモ用AI追加
       const addMockPlayers = async () => {
         const firstNames = ["佐藤", "鈴木", "高橋", "田中", "渡辺", "伊藤", "山本", "中村", "小林", "加藤"];
         const lastNames = ["たかし", "ゆうた", "しょーた", "まい", "ゆい", "ひな", "れん", "さくら", "たくや", "みさき"];
@@ -799,7 +680,6 @@
         playSound('click');
       };
 
-      // 出題開始
       const startQuestion = async () => {
         playSound('click');
         if (isOnlineMode) {
@@ -837,17 +717,16 @@
         else setGameState(prev => ({ ...prev, status: 'reveal_answer' }));
       };
 
-      // 感謝祭最新配点システム加算ロジック【サバイバルロック排除・全員配点ルールへ完全移行】
+      // 感謝祭最新配点システム（最速15pt / 通常10pt / ワースト正解1pt）
       const revealWorstAndDistributePoints = async () => {
         const currentQ = questions[gameState.currentQIndex];
         if (!currentQ) return;
         const correctAnswers = answers.filter(ans => ans && ans.selectedOption === currentQ.answer);
         
-        // 正解者を早押しが速い順（昇順）にソート
-        const sortedCorrect = [...correctAnswers].sort((a, b) => (a.time || 0) - (a.time || 0));
+        // 正解者をタイム順（昇順：a.time - b.time）にソート
+        const sortedCorrect = [...correctAnswers].sort((a, b) => (a.time || 0) - (b.time || 0));
         
         const fastestId = sortedCorrect.length > 0 ? sortedCorrect[0]?.playerId : null;
-        // 正解者が複数(2人以上)の場合のみ最遅ワースト判定を適用。1人の場合は最速ボーナスを優先。
         const worstId = sortedCorrect.length > 1 ? sortedCorrect[sortedCorrect.length - 1]?.playerId : null;
 
         if (isOnlineMode) {
@@ -862,22 +741,19 @@
               let ptsToAdd = 0;
               if (isCorrect) {
                 if (isFastest) {
-                  ptsToAdd = 15; // 最速正解：15pt
+                  ptsToAdd = 15;
                 } else if (isWorst) {
-                  ptsToAdd = 1;  // 最遅正解：1pt
+                  ptsToAdd = 1;
                 } else {
-                  ptsToAdd = 10; // 通常正解：10pt
+                  ptsToAdd = 10;
                 }
               }
 
-              batch.update(pDocRef, { 
-                score: (p.score || 0) + ptsToAdd
-              });
+              batch.update(pDocRef, { score: (p.score || 0) + ptsToAdd });
             }
           }
           await batch.commit();
         } else {
-          // デモ用
           setPlayers(prev => prev.map(p => {
             const isCorrect = correctAnswers.some(ans => ans.playerId === p.id);
             const isFastest = p.id === fastestId;
@@ -889,10 +765,7 @@
               else if (isWorst) ptsToAdd = 1;
               else ptsToAdd = 10;
             }
-            return { 
-              ...p, 
-              score: (p.score || 0) + ptsToAdd 
-            };
+            return { ...p, score: (p.score || 0) + ptsToAdd };
           }));
         }
 
@@ -922,7 +795,6 @@
         }
       };
 
-      // カウントアップ式順位発表の制御
       const startRankReveal = () => {
         if (players.length === 0) return;
         playSound('gong');
@@ -941,7 +813,6 @@
         }
       };
 
-      // プレイヤー用5色ボタンのTailwind完全静的マッピング（チラつき・無変化を完全に解消する静的マッパー）
       const getPlayerButtonClass = (oIdx, isSelected, anySelected, disabled) => {
         if (isSelected) {
           return 'bg-gradient-to-b from-amber-400 to-yellow-500 text-slate-950 scale-90 translate-y-[6px] shadow-[0_1px_0_#78350f,0_0_25px_rgba(245,158,11,1)] border-white ring-4 ring-amber-400/50';
@@ -969,16 +840,10 @@
 
       const currentQuestion = questions[gameState.currentQIndex] || null;
 
-      // ==========================================
-      // 【華麗な3条件分岐レンダリング】
-      // ==========================================
-
-      // 1. 起動時：役割未選択（!role）のとき。100%確実にログイン画面を表示
+      // 1. 初期画面
       if (!role) {
         return (
           <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center p-4 scanlines select-none overflow-hidden relative">
-            
-            {/* こっそり端に配置するホスト起動用王冠アイコンリンク（文字なしで隅にこっそり配置） */}
             <button 
               onClick={() => { setRole('host'); playSound('click'); }}
               className="absolute top-4 right-4 text-slate-800 hover:text-amber-500/80 p-2.5 rounded-full transition-all duration-300 hover:scale-110 active:scale-95 z-50 bg-slate-900/50 border border-slate-800"
@@ -1014,7 +879,7 @@
         );
       }
 
-      // 2. プレイヤー（role === 'player'）のとき。スマホ専用・縦スクロール完全排除画面
+      // 2. プレイヤー画面
       if (role === 'player') {
         const anySelected = myAnswer !== null;
 
@@ -1036,16 +901,12 @@
                 </div>
               ) : (
                 <div className="flex flex-col justify-between h-full space-y-2">
-                  
-                  {/* アッパー情報バー */}
                   <div className="bg-slate-900 border border-slate-800 rounded-xl p-2 flex justify-between items-center text-xs font-bold shrink-0">
                     <span className="flex items-center gap-1 truncate max-w-[120px]"><Users className="w-3.5 h-3.5 text-emerald-400" />{playerName}</span>
                     <span className="bg-slate-950 px-3 py-1 rounded-full text-amber-400 font-mono">得点: {players.find(p => p.id === user?.uid)?.score || 0} pt</span>
                   </div>
 
-                  {/* モバイルビューコンテンツ。スクロールを絶対に発生させないよう高さを高度に制御 */}
                   <div className="flex-grow flex flex-col justify-center overflow-hidden">
-                    
                     {gameState.status === 'lobby' && (
                       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 text-center space-y-3">
                         <div className="animate-spin text-blue-400 inline-block"><RefreshCw className="w-8 h-8" /></div>
@@ -1056,13 +917,11 @@
 
                     {gameState.status === 'reading_answering' && currentQuestion && (
                       <div className="bg-slate-900 border-2 border-slate-800 rounded-2xl p-3 shadow-xl flex flex-col justify-between max-h-[80vh] space-y-3 overflow-hidden">
-                        
                         <div className="inline-block bg-slate-950 px-3 py-1 rounded-xl border border-slate-800 font-mono mx-auto self-center shrink-0">
                           <span className="text-[8px] text-slate-400 block text-center">残り時間</span>
                           <span className={`text-xl font-black ${timeLeft <= 3 ? 'text-rose-500 animate-ping' : 'text-white'}`}>{timeLeft.toFixed(2)}s</span>
                         </div>
 
-                        {/* 問題文 ＆ 選択肢 (高さをスマホ用に極限まで絞り、絶対にスクロールを排除) */}
                         <div className="bg-slate-950/90 border border-slate-800 rounded-xl p-2.5 text-left space-y-1.5 max-h-[150px] overflow-y-auto no-scrollbar shrink-0">
                           <p className="text-[11px] font-black text-yellow-100 leading-snug border-b border-slate-800/60 pb-1 shrink-0">
                             Q{gameState.currentQIndex + 1}: {currentQuestion.text}
@@ -1088,7 +947,6 @@
                         
                         <h3 className="text-[10px] font-black tracking-wide text-slate-400 text-center shrink-0">正しい番号をタップしてください！</h3>
 
-                        {/* おなじみの5色丸キーパッド：選択後に他のボタンがグレーアウト（透明度30%）にする極上フィードバック */}
                         <div className="flex justify-center items-center gap-1.5 max-w-sm mx-auto py-1.5 shrink-0">
                           {[0, 1, 2, 3, 4].map((oIdx) => {
                             const isSelected = myAnswer === oIdx;
@@ -1160,7 +1018,7 @@
                               <p className="text-[11px] text-slate-400">クイズ不正解、またはタイムアップ未回答でした。</p>
                             </div>
                           )}
-                          <p className="text-[10px] text-slate-500 mt-2">※お休みシステムは廃止されたため、全員次の問題も続けて回答できます！</p>
+                          <p className="text-[10px] text-slate-500 mt-2">※全員次の問題も続けて回答できます！</p>
                         </div>
                       </div>
                     )}
@@ -1171,7 +1029,6 @@
                         <p className="text-xs text-slate-400">最終順位発表を開始します！</p>
                       </div>
                     )}
-
                   </div>
 
                   <footer className="text-center text-[9px] text-slate-600 py-1 border-t border-slate-900 shrink-0">
@@ -1185,14 +1042,9 @@
         );
       }
 
-      // 3. 主催者ホスト（role === 'host'）のとき。スクロール一切不要の複製大画面UI
+      // 3. 主催者ホスト画面（幅80pxのスリムリモコン常駐）
       return (
         <div className="h-screen max-h-screen bg-slate-950 text-white flex flex-row p-0 overflow-hidden box-border">
-          
-          {/* ==========================================
-              左隅常駐：幅を完全に半分（w-20：80px）に極細化した超スマート操作バー！
-              文字を極小・省略表記にし、メイン選択肢への被りを100%物理的にポチポチ撲滅！
-             ========================================== */}
           <div className="w-[80px] shrink-0 bg-slate-900/95 border-r border-slate-800 flex flex-col justify-between items-center py-4 z-50 h-full">
             <div className="flex flex-col items-center space-y-4 w-full px-1">
               <span className="text-[8px] font-black text-amber-500 tracking-wider text-center uppercase leading-tight">REMOTE</span>
@@ -1249,10 +1101,7 @@
             </div>
           </div>
 
-          {/* クイズメインモニターエリア：左極細リモコンと物理並立分割により、一切被らず全画面表示可能！ */}
           <div className="flex-grow flex flex-col justify-between p-4 pl-6 pr-4 max-h-screen overflow-hidden box-border">
-            
-            {/* 上部ヘッダーボード */}
             <div className="bg-slate-900/90 border-b-2 border-amber-500/30 p-3 rounded-xl flex justify-between items-center shadow-lg shrink-0">
               <div className="flex items-center space-x-3">
                 <div className="bg-blue-600 p-1.5 rounded-lg border border-yellow-300 animate-pulse"><Zap className="w-5 h-5 text-yellow-300" /></div>
@@ -1264,7 +1113,6 @@
               </div>
             </div>
 
-            {/* 15秒タイマーゲージ */}
             {gameState.status === 'reading_answering' && (
               <div className="bg-slate-900/40 p-2 rounded-xl border border-slate-800 shrink-0 animate-fade-in">
                 <div className="flex justify-between items-center mb-1 font-mono text-xs text-slate-400">
@@ -1277,17 +1125,13 @@
               </div>
             )}
 
-            {/* メイン演出・スクリーンボード (解答発表中以外はクイズテキスト。発表中は大迫力の縦配置発表) */}
             <div className="flex-grow bg-slate-900/70 border-2 border-slate-800 rounded-2xl p-4 flex flex-col justify-center items-center relative overflow-hidden shadow-inner min-h-[220px] my-3">
-              
-              {/* READY GO! ポップアップ */}
               {gameState.status === 'reading_answering' && timeLeft > 13.5 && (
                 <div className="absolute inset-0 bg-slate-950/95 flex items-center justify-center z-40">
                   <div className="bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 text-slate-950 font-black text-4xl md:text-6xl py-4 px-10 rounded-xl shadow-2xl border-4 border-white tracking-widest anonymity animate-banner">READY GO!</div>
                 </div>
               )}
 
-              {/* 通常時：問題文の巨大表示 (正解発表および最遅ワースト発表フェーズ以外でのみ表示) */}
               {gameState.status !== 'reveal_worst' && gameState.status !== 'reveal_answer' && (
                 <div className="text-center w-full max-w-4xl px-2 animate-fade-in">
                   <h2 className="text-xl md:text-3.5xl lg:text-4.5xl font-black text-yellow-100 leading-relaxed tracking-wide drop-shadow-md">
@@ -1296,7 +1140,6 @@
                 </div>
               )}
 
-              {/* 【新設】STEP 3：正解発表フェーズ（5択選択肢パネルを完全非表示にし、スクリーン中央に特大で点滅発表） */}
               {gameState.status === 'reveal_answer' && currentQuestion && (
                 <div className="w-full max-w-3xl flex flex-col justify-center items-center space-y-6 text-center animate-fade-in">
                   <span className="text-xs text-emerald-400 font-extrabold tracking-widest block uppercase">ANSWER CHECK (正解発表)</span>
@@ -1312,10 +1155,8 @@
                 </div>
               )}
 
-              {/* STEP 4：配点結果 ➔ 最速＆最遅発表（選択肢を完全に消して大迫力の縦並びで大表示！） */}
               {gameState.status === 'reveal_worst' && (
                 <div className="w-full max-w-3xl flex flex-col justify-center items-center space-y-4 animate-fade-in">
-                  
                   {revealStage === 'showing_losers' && (
                     <div className="space-y-4 w-full">
                       <h3 className="text-base text-rose-400 font-extrabold uppercase flex items-center justify-center gap-1.5 animate-pulse">
@@ -1325,7 +1166,6 @@
                         {visibleLosers.map((p, i) => (
                           <div key={p.id} className="bg-slate-900/95 border-2 border-slate-800 p-3 rounded-2xl flex flex-col items-center justify-center animate-fade-in shadow-md">
                             <span className="text-[10px] text-slate-400 font-bold mb-1">正解順位 下位 {11 - i}位</span>
-                            {/* ネームプレート・名前を特大サイズ化 */}
                             <span className="text-xl md:text-2xl font-black text-white truncate w-full text-center">{p.name || ''}</span>
                             <span className="text-xs text-slate-400 font-mono mt-1 font-bold">{((p.time || 0) / 1000).toFixed(2)}秒</span>
                           </div>
@@ -1341,11 +1181,8 @@
                     </div>
                   )}
 
-                  {/* 最速チャンピオン（上段・中サイズ）と、最遅ワースト（下段・看板級の超絶巨大表示！）の配置 */}
                   {revealStage === 'showing_worst' && (
                     <div className="flex flex-col space-y-6 items-center w-full">
-                      
-                      {/* ① 最速解答者の発表 (上部・以前のままでよい) */}
                       {fastestPlayer && (
                         <div className="bg-gradient-to-br from-yellow-500/10 via-yellow-500/15 to-yellow-500/10 border border-yellow-500/30 p-4 rounded-xl text-center shadow-lg w-full max-w-lg">
                           <span className="text-xs text-yellow-300 font-black tracking-widest block uppercase font-bold">FASTEST CHAMPION (最速解答者 15pt)</span>
@@ -1354,7 +1191,6 @@
                         </div>
                       )}
 
-                      {/* ② ワースト最遅プレイヤー（下部・プロジェクター用の大看板級の超巨大文字！） */}
                       {worstPlayer && (
                         <div className="bg-slate-950 border-4 border-indigo-500 p-6 rounded-3xl text-center shadow-[0_0_35px_rgba(99,102,241,0.5)] w-full max-w-xl animate-fade-in">
                           <span className="text-sm text-indigo-400 font-black tracking-widest block uppercase font-bold">TOUCH OF THE DELAY (最遅正解者 1pt)</span>
@@ -1364,7 +1200,6 @@
                           <p className="text-sm text-slate-400 mt-2 font-bold">早押しタイム: <b className="text-white text-lg font-mono">{((worstPlayer.time || 0)/1000).toFixed(3)}</b> 秒</p>
                         </div>
                       )}
-
                     </div>
                   )}
 
@@ -1374,13 +1209,10 @@
                       <p className="text-sm text-slate-400">正解したプレイヤーがいませんでした。次の問題へ進みましょう！</p>
                     </div>
                   )}
-
                 </div>
               )}
-
             </div>
 
-            {/* 5選択肢パネル（正解発表・ワースト発表フェーズ時は「表示を完全に消去」して中央 of 発表スペースを最大化！） */}
             {gameState.status !== 'reveal_worst' && gameState.status !== 'reveal_answer' ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 max-w-4xl mx-auto w-full shrink-0 animate-fade-in">
                 {currentQuestion?.options.map((opt, oIdx) => {
@@ -1396,7 +1228,6 @@
                     'border-purple-500/30 bg-purple-950/20 text-purple-200'
                   ];
 
-                  // 2秒間点滅 ➔ 通常点灯（固定）ロジック
                   const isFlashingNow = isAnswerState && isCorrect && isFlashingActive;
                   const isStaticHighlightNow = isAnswerState && isCorrect && !isFlashingActive;
 
@@ -1428,10 +1259,9 @@
                 })}
               </div>
             ) : null}
-
           </div>
 
-          {/* クイズ問題編集ボード */}
+          {/* 問題編集モーダル */}
           {isEditingQuestions && (
             <div className="fixed inset-4 bg-slate-900/95 border-2 border-slate-800 rounded-2xl p-4 shadow-2xl flex flex-col justify-between z-50 animate-fade-in text-xs">
               <div className="flex justify-between items-center border-b border-slate-800 pb-2">
@@ -1465,7 +1295,7 @@
             </div>
           )}
 
-          {/* 下部：スクロール可能な横並び参加者ボード */}
+          {/* 下部参加者リスト */}
           <div className="bg-slate-900/60 border-t border-slate-800/60 p-1.5 rounded-xl flex items-center space-x-2 overflow-x-auto no-scrollbar max-h-[45px] box-border shrink-0 fixed bottom-2 right-4 left-24">
             <div className="flex items-center space-x-1.5 shrink-0 text-slate-500 text-[10px] font-black uppercase tracking-wider border-r border-slate-800 pr-2">
               <Users className="w-3.5 h-3.5 text-blue-400" /> <span>BOARD ({players.length})</span>
@@ -1488,7 +1318,7 @@
             </div>
           </div>
 
-          {/* ロビー画面 (参加者0人の時、デバッグ用AIプレイヤー30人追加ショートカットボタンを表示) */}
+          {/* ロビー */}
           {gameState.status === 'lobby' && !isEditingQuestions && (
             <div className="fixed inset-y-4 top-20 bottom-16 bg-slate-900 border-2 border-slate-800 rounded-3xl p-6 md:p-12 text-center flex flex-col justify-center items-center shadow-2xl z-20 animate-fade-in left-24 right-4">
               <div className="animate-pulse bg-blue-500/10 p-4 rounded-full border border-blue-500/20 mb-4">
@@ -1522,12 +1352,9 @@
             </div>
           )}
 
-          {/* ==========================================
-              【華麗なる最終順位発表全画面ステージ】（30位からせり上がりカウントアップ順位発表！）
-             ========================================== */}
+          {/* 最終順位発表ステージ */}
           {gameState.status === 'finished' && (
             <div className="fixed inset-y-4 top-20 bottom-16 bg-slate-900 border-4 border-amber-500/50 rounded-3xl p-6 text-center flex flex-col justify-between items-center shadow-2xl z-40 animate-fade-in left-24 right-4 overflow-hidden">
-              
               {!revealRankingActive ? (
                 <div className="my-auto space-y-6 animate-fade-in">
                   <div className="text-6xl text-amber-400">👑</div>
@@ -1551,20 +1378,16 @@
                     <p className="text-xs text-slate-500 mt-0.5">下位（最大30名）から順番に1名ずつ発表されます</p>
                   </div>
 
-                  {/* 30位から順次せり上がってくるネオンランキングボード */}
                   <div className="flex-grow grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 overflow-y-auto no-scrollbar max-h-[55vh] py-2 border-y border-slate-800">
-                    {/* 降順（1位から順）だが、revealRankIndex 以上のインデックスのみ表示する（＝下位から出現） */}
                     {[...players]
                       .sort((a, b) => (b.score || 0) - (a.score || 0))
                       .slice(0, 30)
-                      .map((p, idx, arr) => {
-                        // revealRankIndexより数値が大きい（下位）の場合のみ表示
+                      .map((p, idx) => {
                         const isRevealed = revealRankIndex === -1 || idx > revealRankIndex;
                         const rankNum = idx + 1;
 
                         if (!isRevealed) return null;
 
-                    
                         return (
                           <div 
                             key={p.id} 
@@ -1588,7 +1411,6 @@
                       })}
                   </div>
 
-                  {/* コントロール・ボタンエリア */}
                   <div className="flex justify-center items-center gap-4 py-2 shrink-0">
                     {revealRankIndex >= 0 ? (
                       <button 
@@ -1611,7 +1433,6 @@
                   </div>
                 </div>
               )}
-
             </div>
           )}
 
