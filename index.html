@@ -1002,26 +1002,37 @@
                       </div>
                     )}
 
-                    {/* ポイント確定フェーズ（STEP 4: reveal_worst 後）に正解順位ポイント結果をしっかり表示！ */}
+                    {/* ポイント確定フェーズ（STEP 4: reveal_worst）：大画面での最速・最遅発表完了（showing_worst）後にポイント結果を表示！ */}
                     {gameState.status === 'reveal_worst' && (
                       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-center space-y-3 animate-fade-in">
                         <h4 className="text-xs font-bold text-slate-400">早押し集計 ＆ ポイント結果</h4>
-                        <div className="bg-slate-950 p-4 rounded-xl space-y-1 border border-slate-800">
-                          {isCorrectLocal ? (
-                            <div>
-                              <h4 className="text-base font-black text-emerald-400">ポイント加算完了！</h4>
-                              <p className="text-[11px] text-slate-300">
-                                タイム順位に応じたポイント（最速15pt / 通常10pt / 最遅1pt）が加算されました！
-                              </p>
+                        
+                        {revealStage !== 'showing_worst' ? (
+                          <div className="bg-slate-950 p-5 rounded-xl space-y-2 border border-slate-800">
+                            <div className="animate-spin text-amber-400 inline-block">
+                              <RefreshCw className="w-8 h-8" />
                             </div>
-                          ) : (
-                            <div>
-                              <h4 className="text-base font-black text-slate-500">ポイント加算なし (0pt)</h4>
-                              <p className="text-[11px] text-slate-400">クイズ不正解、またはタイムアップ未回答でした。</p>
-                            </div>
-                          )}
-                          <p className="text-[10px] text-slate-500 mt-2">※次の問題も続けて回答できます！</p>
-                        </div>
+                            <h4 className="text-sm font-black text-amber-300 animate-pulse">大画面で最速・最遅を発表中...</h4>
+                            <p className="text-[11px] text-slate-400">プロジェクターの発表をお待ちください！</p>
+                          </div>
+                        ) : (
+                          <div className="bg-slate-950 p-4 rounded-xl space-y-1 border border-slate-800 animate-fade-in">
+                            {isCorrectLocal ? (
+                              <div>
+                                <h4 className="text-base font-black text-emerald-400">ポイント加算完了！</h4>
+                                <p className="text-[11px] text-slate-300">
+                                  タイム順位に応じたポイント（最速15pt / 通常10pt / 最遅1pt）が加算されました！
+                                </p>
+                              </div>
+                            ) : (
+                              <div>
+                                <h4 className="text-base font-black text-slate-500">ポイント加算なし (0pt)</h4>
+                                <p className="text-[11px] text-slate-400">クイズ不正解、またはタイムアップ未回答でした。</p>
+                              </div>
+                            )}
+                            <p className="text-[10px] text-slate-500 mt-2">※次の問題も続けて回答できます！</p>
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -1109,7 +1120,7 @@
             <div className="bg-slate-900/90 border-b-2 border-amber-500/30 p-3 rounded-xl flex justify-between items-center shadow-lg shrink-0">
               <div className="flex items-center space-x-3">
                 <div className="bg-blue-600 p-1.5 rounded-lg border border-yellow-300 animate-pulse"><Zap className="w-5 h-5 text-yellow-300" /></div>
-                <h1 className="text-lg md:text-xl font-black bg-gradient-to-r from-yellow-300 to-rose-400 bg-clip-text text-transparent">臨床検査技術学科 クイズバトル</h1>
+                <h1 className="text-lg md:text-xl font-black bg-gradient-to-r from-yellow-300 to-rose-400 bg-clip-text text-transparent">臨床検査技術学科　クイズバトル</h1>
               </div>
               <div className="text-right flex items-center space-x-4 font-mono text-sm">
                 <span className="text-slate-400">問題: <b className="text-white text-base">{gameState.currentQIndex + 1} / {questions.length}</b></span>
