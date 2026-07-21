@@ -82,7 +82,7 @@
     let firebaseApp = null;
     let auth = null;
     let db = null;
-    let appId = 'hayaosi-quiz-room-1';
+    let appId = 'hayaosi-quiz-room-v2';
     let isOnlineMode = false;
 
     try {
@@ -100,7 +100,7 @@
         firebaseApp = window.firebase.initializeApp(myCustomConfig);
         auth = window.firebase.auth();
         db = window.firebase.firestore();
-        appId = 'hayaosi-quiz-room-1';
+        appId = 'hayaosi-quiz-room-v2';
         isOnlineMode = true;
         console.log("Firebase Online Mode Initialized.");
       } else {
@@ -156,11 +156,11 @@
     );
 
     // ==========================================
-    // 免疫学クイズ設問データ（全17問・修正適用済み）
+    // 免疫学クイズ設問データ（デフォルト問題セット）
     // ==========================================
     const DEFAULT_QUESTIONS = [
       { id: 1, text: "骨髄において未熟B細胞が自己成分に強く反応するレセプターを発現した際、アポトーシスを回避するために行われる遺伝子再構成のやり直しを何と呼ぶか。", options: ["クローン増殖", "負の選択", "レセプター編集", "クラススイッチ", "アネルギー"], answer: 2 },
-      { id: 2, text: "B細胞の活性化において、自然免疫の産物である補体 C3d を認識し、BCRからのシグナルを強力に増強するレセプターはどれか。", options: ["CD40", "CR1（CD35）", "Fc レセプター", "CR2（CD21）", "Toll 様レセプター"], answer: 3 }, // 問2正解をインデックス3(CR2)に修正
+      { id: 2, text: "B細胞の活性化において、自然免疫の産物である補体 C3d を認識し、BCRからのシグナルを強力に増強するレセプターはどれか。", options: ["CD40", "CR1（CD35）", "Fc レセプター", "CR2（CD21）", "Toll 様レセプター"], answer: 3 },
       { id: 3, text: "補体系の活性化経路のうち、免疫複合体（抗原＋抗体）によって開始される「古典経路」のトリガーとして最も強力な抗体クラスはどれか。", options: ["IgA", "IgE", "IgM", "IgG4", "IgD"], answer: 2 },
       { id: 4, text: "補体系の活性化において、マグネシウムイオン（Mg2+）を必須とする反応段階はどれか。", options: ["膜傷害複合体（MAC）における C9 の重合", "レクチン経路における MBL と糖鎖の結合", "別経路における C3b と B因子 の結合", "免疫粘着現象における赤血球の捕捉", "古典経路における C1q と抗体の結合"], answer: 2 },
       { id: 5, text: "補体活性化の最終産物である膜傷害複合体（MAC）が最も有効に機能し、菌体を直接破壊（溶菌）を期待できる標的はどれか。", options: ["肺炎レンサ球菌（グラム陽性菌）", "ウイルス粒子（エンベロープなし）", "黄色ブドウ球菌（グラム陽性菌）", "真菌（カビ・酵母）", "髄膜炎菌（グラム陰性菌）"], answer: 4 },
@@ -178,31 +178,21 @@
       { id: 17, text: "補体系の活性化において、Ca2+(カルシウムイオン)が必須となるステップはどれか。", options: ["レクチン経路におけるC3の分解", "C1複合体(C1q,C1r,C1s)の安定化と形成", "副経路におけるB因子の結合", "膜傷害複合体(MAC)の細胞膜への挿入", "C3転換酵素によるC3の分解"], answer: 1 }
     ];
 
-    // 配列および選択肢を精密にシャッフルし、正解インデックスの位置を100%正しく自動追従させるユーティリティ
+    // 配列および選択肢をシャッフルし、正解位置を追従させるユーティリティ
     const shuffleQuestionsAndOptions = (rawList) => {
       const cloned = JSON.parse(JSON.stringify(rawList));
       
-      // 1. 各問題の「選択肢」をランダムシャッフル＆正解追従
       const shuffledOptionsList = cloned.map(q => {
-        const correctText = q.options[q.answer]; // 元の正解テキストを保存
-        
-        // 選択肢の配列をシャッフル (Fisher-Yates)
+        const correctText = q.options[q.answer];
         const opts = [...q.options];
         for (let i = opts.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
           [opts[i], opts[j]] = [opts[j], opts[i]];
         }
-        
-        // シャッフル後の正解位置（インデックス）を再探索して自動更新
         const newAnswerIndex = opts.indexOf(correctText);
-        return {
-          ...q,
-          options: opts,
-          answer: newAnswerIndex
-        };
+        return { ...q, options: opts, answer: newAnswerIndex };
       });
 
-      // 2. 「出題順」をランダムシャッフル
       for (let i = shuffledOptionsList.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [shuffledOptionsList[i], shuffledOptionsList[j]] = [shuffledOptionsList[j], shuffledOptionsList[i]];
@@ -225,6 +215,9 @@
       const [editQuestionText, setEditQuestionText] = useState('');
       const [editOptions, setEditOptions] = useState(["", "", "", "", ""]);
       const [editAnswerIndex, setEditAnswerIndex] = useState(0);
+
+      // JSON一括入出力用のテキストエリア状態
+      const [jsonText, setJsonText] = useState('');
 
       const [gameState, setGameState] = useState({
         status: 'lobby', 
@@ -333,7 +326,7 @@
         }
       };
 
-      // 認証（匿名認証）
+      // 認証
       useEffect(() => {
         if (!isOnlineMode) {
           setUser({ uid: 'offline-local-user-id' });
@@ -373,8 +366,14 @@
 
         const customQuestionsDocRef = db.doc(`artifacts/${appId}/public/data/questions/custom`);
         const unsubQuestions = customQuestionsDocRef.onSnapshot((snap) => {
-          if (snap.exists) { const d = snap.data(); if (d?.list) setQuestions(d.list); }
-          else customQuestionsDocRef.set({ list: DEFAULT_QUESTIONS });
+          if (snap.exists) { 
+            const d = snap.data(); 
+            if (d?.list && Array.isArray(d.list) && d.list.length > 0) {
+              setQuestions(d.list); 
+            }
+          } else {
+            customQuestionsDocRef.set({ list: DEFAULT_QUESTIONS });
+          }
         });
 
         const playersColRef = db.collection(`artifacts/${appId}/public/data/players`);
@@ -431,7 +430,6 @@
         return () => clearInterval(interval);
       }, [gameState.status, gameState.questionStartTime, role]);
 
-      // 演出ステージをデータベースおよび全端末に同期送信するヘルパー関数
       const syncRevealStage = async (stage) => {
         setRevealStage(stage);
         if (isOnlineMode) {
@@ -445,7 +443,6 @@
         }
       };
 
-      // 点滅タイマー
       useEffect(() => {
         if (flashTimeoutRef.current) clearTimeout(flashTimeoutRef.current);
         setIsFlashingActive(false);
@@ -464,7 +461,6 @@
         }
       }, [gameState.status, revealStage]);
 
-      // ステート同期
       useEffect(() => {
         const statusChanged = prevStatusRef.current !== gameState.status;
         const qIndexChanged = prevQIndexRef.current !== gameState.currentQIndex;
@@ -517,7 +513,6 @@
           return { id: ans.playerId, name: ans.playerName || pInfo?.name || 'ゲスト', time: Number(ans.time) || 15000 };
         });
 
-        // 昇順（タイムが小さい＝速い順）に確実にソート！
         correctPlayersList.sort((a, b) => a.time - b.time);
         
         const fastest = correctPlayersList[0];
@@ -602,6 +597,8 @@
         playSound('click');
         setIsEditingQuestions(true);
         loadQuestionToEdit(0);
+        // 現在の問題リストをJSONテキストエリアに自動セット
+        setJsonText(JSON.stringify(questions, null, 2));
       };
 
       const loadQuestionToEdit = (index) => {
@@ -623,6 +620,7 @@
           answer: editAnswerIndex
         };
         setQuestions(updated);
+        setJsonText(JSON.stringify(updated, null, 2));
         playSound('click');
       };
 
@@ -635,19 +633,46 @@
           answer: editAnswerIndex
         };
 
+        await pushQuestionsToCloud(updated);
+        setIsEditingQuestions(false);
+      };
+
+      // ⚡ 新機能①: コード内（DEFAULT_QUESTIONS）の最新問題を直接クラウドへ強制上書き同期！
+      const forceSyncDefaultQuestions = async () => {
+        if (!confirm("コード（DEFAULT_QUESTIONS）に記載された問題を、クラウドデータベースへ強制上書き同期しますか？")) return;
+        await pushQuestionsToCloud(DEFAULT_QUESTIONS);
+        alert("コード内の最新問題セットをクラウドに強制同期しました！");
+      };
+
+      // ⚡ 新機能②: JSONテキストから一括取り込み＆全同期！
+      const importQuestionsFromJson = async () => {
+        try {
+          const parsed = JSON.parse(jsonText);
+          if (!Array.isArray(parsed) || parsed.length === 0) {
+            alert("エラー: 有効な問題のJSON配列ではありません。");
+            return;
+          }
+          await pushQuestionsToCloud(parsed);
+          alert(`全 ${parsed.length} 問の問題データの一括同期が完了しました！`);
+        } catch (e) {
+          alert("JSONテキストの形式にエラーがあります。構文を確認してください。\n" + e.message);
+        }
+      };
+
+      // クラウドへ問題リストを一括保存・全同期する共通ヘルパー
+      const pushQuestionsToCloud = async (targetQuestions) => {
+        setQuestions(targetQuestions);
+        setJsonText(JSON.stringify(targetQuestions, null, 2));
         if (isOnlineMode) {
           try {
-            const customQuestionsDocRef = db.doc(`artifacts/${appId}/public/data/questions/custom`);
-            await customQuestionsDocRef.set({ list: updated });
+            await db.doc(`artifacts/${appId}/public/data/questions/custom`).set({ list: targetQuestions });
             playSound('correct');
           } catch (e) {
-            console.error(e);
+            console.error("Questions Sync Error:", e);
           }
         } else {
-          setQuestions(updated);
           playSound('correct');
         }
-        setIsEditingQuestions(false);
       };
 
       const resetGame = async () => {
@@ -660,9 +685,6 @@
           const batch = db.batch();
           batch.set(db.doc(`artifacts/${appId}/public/data/game_state/current`), { status: 'lobby', currentQIndex: 0, questionStartTime: null, revealStage: 'idle' });
           
-          // リセット時にデフォルトの免疫学17問を最新シャッフルしてクラウドに書き戻す
-          batch.set(db.doc(`artifacts/${appId}/public/data/questions/custom`), { list: DEFAULT_QUESTIONS });
-
           const playersSnap = await db.collection(`artifacts/${appId}/public/data/players`).get();
           playersSnap.forEach((d) => batch.delete(d.ref));
           
@@ -728,11 +750,9 @@
         playSound('click');
       };
 
-      // ロビーから出題開始する際、問題を全ランダムシャッフルしてクラウド同期！
       const startQuestion = async () => {
         playSound('click');
 
-        // ロビーからの初出題時は「出題順」＆「選択肢の順番」を一括ランダムシャッフル！
         let targetQuestions = questions;
         if (gameState.status === 'lobby') {
           targetQuestions = shuffleQuestionsAndOptions(questions.length > 0 ? questions : DEFAULT_QUESTIONS);
@@ -745,7 +765,6 @@
           answersSnap.forEach((d) => batch.delete(d.ref));
           
           if (gameState.status === 'lobby') {
-            // シャッフル後の最新クイズリストをクラウドに保存して全スマホに一斉配信！
             batch.set(db.doc(`artifacts/${appId}/public/data/questions/custom`), { list: targetQuestions });
           }
 
@@ -780,13 +799,11 @@
         else setGameState(prev => ({ ...prev, status: 'reveal_answer' }));
       };
 
-      // 配点システム（最速15pt / 通常10pt / ワースト1pt）の厳密な加算処理
       const revealWorstAndDistributePoints = async () => {
         const currentQ = questions[gameState.currentQIndex];
         if (!currentQ) return;
         const correctAnswers = answers.filter(ans => ans && Number(ans.selectedOption) === Number(currentQ.answer));
         
-        // 正解者をタイム順（昇順：a.time - b.time）に確実にソート！
         const sortedCorrect = [...correctAnswers].sort((a, b) => (Number(a.time) || 0) - (Number(b.time) || 0));
         
         const fastestId = sortedCorrect.length > 0 ? sortedCorrect[0]?.playerId : null;
@@ -1046,7 +1063,6 @@
                       </div>
                     )}
 
-                    {/* 正解発表フェーズ */}
                     {gameState.status === 'reveal_answer' && currentQuestion && (
                       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-center space-y-3">
                         <h4 className="text-xs font-bold text-slate-400">アンサーチェック結果</h4>
@@ -1068,7 +1084,6 @@
                       </div>
                     )}
 
-                    {/* ポイント確定フェーズ（STEP 4: reveal_worst）：クラウドから同期される revealStage が 'showing_worst' に達した瞬間にポイント結果を開封 */}
                     {gameState.status === 'reveal_worst' && (
                       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-center space-y-3 animate-fade-in">
                         <h4 className="text-xs font-bold text-slate-400">早押し集計 ＆ ポイント結果</h4>
@@ -1176,7 +1191,7 @@
               <button onClick={() => setIsMuted(!isMuted)} className="w-7 h-7 rounded bg-slate-800 hover:bg-slate-700 text-xs flex items-center justify-center">
                 {isMuted ? "🔇" : "🔊"}
               </button>
-              <span className="text-[8px] text-slate-600">v3.1</span>
+              <span className="text-[8px] text-slate-600">v3.2</span>
             </div>
           </div>
 
@@ -1342,35 +1357,66 @@
             ) : null}
           </div>
 
-          {/* 問題編集モーダル */}
+          {}
+          {/* 問題編集 ＆ 超簡単同期モーダル */}
           {isEditingQuestions && (
             <div className="fixed inset-4 bg-slate-900/95 border-2 border-slate-800 rounded-2xl p-4 shadow-2xl flex flex-col justify-between z-50 animate-fade-in text-xs">
               <div className="flex justify-between items-center border-b border-slate-800 pb-2">
-                <h3 className="text-sm font-black text-indigo-400 flex items-center gap-1.5"><EditIcon className="w-4 h-4" /> 問題カスタマイズ作成・編集ボード</h3>
+                <h3 className="text-sm font-black text-indigo-400 flex items-center gap-1.5"><EditIcon className="w-4 h-4" /> 問題カスタマイズ作成・一括同期ボード</h3>
                 <button onClick={() => setIsEditingQuestions(false)} className="text-slate-400 hover:text-white font-bold">✕ 閉じる</button>
               </div>
-              <div className="grid grid-cols-4 gap-4 flex-grow my-3 overflow-hidden">
-                <div className="col-span-1 border-r border-slate-800 pr-1 space-y-1 overflow-y-auto h-full no-scrollbar">
+              
+              <div className="grid grid-cols-12 gap-4 flex-grow my-3 overflow-hidden">
+                {/* 1. 左側: 問題一覧（4列） */}
+                <div className="col-span-3 border-r border-slate-800 pr-2 space-y-1 overflow-y-auto h-full no-scrollbar">
+                  <div className="text-[10px] text-slate-400 font-bold mb-2">問題リスト (全 {questions.length} 問)</div>
                   {questions.map((q, idx) => (
-                    <button key={idx} onClick={() => { saveSelectedEdit(); loadQuestionToEdit(idx); }} className={`w-full text-left px-2 py-1.5 rounded text-[11px] font-bold transition-all truncate block ${selectedEditIndex === idx ? 'bg-indigo-600 text-white' : 'bg-slate-800/40'}`}>
+                    <button key={idx} onClick={() => { saveSelectedEdit(); loadQuestionToEdit(idx); }} className={`w-full text-left px-2 py-1.5 rounded text-[11px] font-bold transition-all truncate block ${selectedEditIndex === idx ? 'bg-indigo-600 text-white' : 'bg-slate-800/40 hover:bg-slate-800'}`}>
                       {idx + 1}. {q.text || "(未入力)"}
                     </button>
                   ))}
                 </div>
-                <div className="col-span-3 space-y-3 overflow-y-auto h-full pr-1">
+
+                {/* 2. 中央: 1問ずつの個別編集（5列） */}
+                <div className="col-span-5 border-r border-slate-800 pr-2 space-y-3 overflow-y-auto h-full">
                   <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
-                    <span className="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded font-bold">第 {selectedEditIndex + 1} 問</span>
-                    <textarea value={editQuestionText} onChange={(e) => setEditQuestionText(e.target.value)} rows={2} className="w-full bg-slate-900 border border-slate-800 rounded p-2 text-xs text-white focus:outline-none" />
+                    <span className="text-[10px] bg-indigo-500/20 text-indigo-400 px-2 py-0.5 rounded font-bold">個別編集: 第 {selectedEditIndex + 1} 問</span>
+                    <textarea value={editQuestionText} onChange={(e) => setEditQuestionText(e.target.value)} rows={2} className="w-full bg-slate-900 border border-slate-800 rounded p-2 text-xs text-white focus:outline-none focus:border-indigo-500" />
                     <div className="space-y-1.5">
                       {editOptions.map((opt, oIdx) => (
                         <div key={oIdx} className="flex items-center space-x-2">
-                          <input type="text" value={opt} onChange={(e) => { const next = [...editOptions]; next[oIdx] = e.target.value; setEditOptions(next); }} className="flex-grow bg-slate-900 border border-slate-800 rounded p-1.5 text-xs text-white" />
+                          <input type="text" value={opt} onChange={(e) => { const next = [...editOptions]; next[oIdx] = e.target.value; setEditOptions(next); }} className="flex-grow bg-slate-900 border border-slate-800 rounded p-1.5 text-xs text-white focus:outline-none focus:border-indigo-500" />
                           <input type="radio" name="editRadio" checked={editAnswerIndex === oIdx} onChange={() => setEditAnswerIndex(oIdx)} className="w-4 h-4 text-indigo-600" />
                         </div>
                       ))}
                     </div>
                   </div>
-                  <div className="flex justify-end"><button onClick={saveAllQuestionsToCloud} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-black shadow-md">クラウド変更保存＆全同期</button></div>
+                  
+                  <div className="space-y-2">
+                    <button onClick={saveAllQuestionsToCloud} className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-black shadow-md">
+                      画面の変更を保存してクラウド同期
+                    </button>
+                    <button onClick={forceSyncDefaultQuestions} className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-slate-950 rounded font-black shadow-md">
+                      ⚡ index.html 内の最新問題を強制クラウド同期
+                    </button>
+                  </div>
+                </div>
+
+                {/* 3. 右側: JSONテキスト一括インポート/エクスポート（4列） */}
+                <div className="col-span-4 space-y-2 flex flex-col h-full overflow-hidden">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] text-amber-400 font-bold">📋 JSON一括コピペ（AI連携）</span>
+                    <span className="text-[9px] text-slate-500">テキスト貼り付け対応</span>
+                  </div>
+                  <textarea 
+                    value={jsonText} 
+                    onChange={(e) => setJsonText(e.target.value)} 
+                    placeholder="AIで作らせたJSON配列テキストをここに貼り付けて「一括反映」を押すだけで入れ替え完了！" 
+                    className="w-full flex-grow bg-slate-950 border border-slate-800 rounded p-2 font-mono text-[10px] text-slate-300 focus:outline-none focus:border-amber-500 no-scrollbar"
+                  />
+                  <button onClick={importQuestionsFromJson} className="w-full py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded font-black shadow-md shrink-0">
+                    テキストから問題一括反映 ＆ クラウド同期
+                  </button>
                 </div>
               </div>
             </div>
